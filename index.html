@@ -1069,6 +1069,43 @@ details.more[open] > div { margin-top: 18px; display: grid; gap: 18px; }
 .sheet-opt svg { width: 20px; height: 20px; color: var(--route); flex: none; }
 @media (min-width: 641px) { .sheet-wrap { align-items: center; } .sheet { border-radius: 24px; } }
 
+
+/* Editing */
+.formhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.formhead h3 { margin: 0; font: 800 18px/1.2 var(--f-display); }
+form.card.editing { border-color: var(--route); box-shadow: 0 0 0 3px color-mix(in srgb, var(--route) 18%, transparent), var(--shadow); }
+.formfoot { display: grid; gap: 12px; }
+.btn.danger { background: transparent; color: var(--danger); border: 1.5px solid color-mix(in srgb, var(--danger) 45%, transparent); }
+.btn.danger.armed { background: var(--danger); color: #fffdf9; border-color: var(--danger); }
+.sechead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.filterchips .chipbtn span { padding: 7px 13px; font-size: 13px; }
+button.recent-row { width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; font: inherit; color: inherit; transition: background .15s var(--ease); }
+button.recent-row:last-child { border-bottom: 0; }
+.recent-row .rt { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+.recent-row .rt svg { width: 16px; height: 16px; }
+tr.rowlink { cursor: pointer; }
+.mediagrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.mtile { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--line); }
+.mtile img, .mtile video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mtile .vbadge { position: absolute; left: 8px; bottom: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center; }
+.mtile .vbadge svg { width: 12px; height: 12px; }
+.mtile .mdel { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: rgba(20,26,25,.7); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+.mtile .mnew { position: absolute; left: 6px; top: 6px; background: var(--warn); color: var(--warn-ink); font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+.madd { display: grid; place-items: center; align-content: center; gap: 6px; text-align: center; border: 2px dashed var(--line); background: var(--panel); color: var(--muted); font-size: 12.5px; font-weight: 700; padding: 8px; cursor: pointer; }
+.madd svg { width: 26px; height: 26px; color: var(--route); }
+.madd input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.gallery { position: relative; }
+.gtrack { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.gtrack::-webkit-scrollbar { display: none; }
+.gslide { flex: 0 0 100%; scroll-snap-align: start; aspect-ratio: 3 / 2; max-height: 520px; background: #111; }
+.gslide img, .gslide video, .gslide iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; }
+.gslide video { object-fit: contain; }
+.vposter { position: relative; width: 100%; height: 100%; padding: 0; border: 0; cursor: pointer; background: #111; display: block; }
+.vposter img { opacity: .85; }
+.vplay { position: absolute; inset: 0; margin: auto; width: 64px; height: 64px; border-radius: 50%; background: rgba(255,253,249,.92); color: var(--ink); display: grid; place-items: center; box-shadow: 0 6px 20px rgba(0,0,0,.3); }
+.vplay svg { width: 26px; height: 26px; margin-left: 4px; }
+.gcount { position: absolute; right: 12px; bottom: 12px; background: rgba(20,26,25,.7); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+
 /* Phone polish */
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--page); z-index: 5000; }
 .page { padding-top: calc(32px + env(safe-area-inset-top, 0px)); }
@@ -1108,6 +1145,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 @media (prefers-reduced-motion: reduce) { .here::after, .skel, .locbox.finding .locdot { animation: none; } }
 
 @media (hover: hover) {
+  button.recent-row:hover, tr.rowlink:hover td { background: color-mix(in srgb, var(--route) 7%, transparent); }
   .route-box .rp:hover { border-color: var(--route); transform: translateY(-1px); }
   .tabs button:hover { background: color-mix(in srgb, var(--tc) 28%, transparent); color: var(--ink); }
   .mapbtn:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
@@ -1239,6 +1277,10 @@ const state = {
   unlocked: false,
   tab: location.hash === '#crew' ? 'crew' : 'overview',
   loc: { status: 'idle' },
+  edit: null,
+  media: [],
+  listFilter: 'all',
+  listAll: false,
   locDefault: '',
   base: LS.get('hl27_base', 'map'),
   logSeg: 'checkin',
@@ -1302,7 +1344,11 @@ function drivenKm() {
   for (let i = 1; i < c.length; i++) km += (c[i].km != null && c[i].km !== '') ? +c[i].km : haversine(c[i - 1], c[i]) * 1.15;
   return km;
 }
-function sortData(d) { if (d && d.checkins) d.checkins.sort((a, b) => new Date(a.time) - new Date(b.time)); return d; }
+function sortData(d) {
+  if (d && d.checkins) d.checkins.sort((a, b) => new Date(a.time) - new Date(b.time));
+  if (d && d.journal) d.journal.forEach(j => { j.media = mediaOf(j); if (!j.photo) j.photo = (j.media.find(m => m.type === 'image') || {}).src || ''; });
+  return d;
+}
 function lastCheckin() { const c = state.data.checkins; return c.length ? c[c.length - 1] : null; }
 
 /* =========================================================
@@ -1633,7 +1679,8 @@ function tripHTML() {
       (st.booked ? '<span class="chip peach">Booked</span>' : '') +
       (state.unlocked ? (st.status !== 'visited' ? '<button class="mini" data-act="status" data-status="visited" data-id="' + esc(st.id) + '">Arrived</button>' : '') +
         (st.status !== 'skipped' && st.status !== 'visited' ? '<button class="mini" data-act="status" data-status="skipped" data-id="' + esc(st.id) + '">Skip</button>' : '') +
-        (st.status !== 'planned' ? '<button class="mini" data-act="status" data-status="planned" data-id="' + esc(st.id) + '">Undo</button>' : '') : '') +
+        (st.status !== 'planned' ? '<button class="mini" data-act="status" data-status="planned" data-id="' + esc(st.id) + '">Undo</button>' : '') +
+        '<button class="mini" data-act="edit" data-kind="stop" data-id="' + esc(st.id) + '">Edit</button>' : '') +
       '</div></div></div></div>';
     if (st.status !== 'skipped') prevActive = st;
   });
@@ -1655,13 +1702,14 @@ function journalHTML() {
   return '<section class="section"><h2>Journal</h2>' +
     (chat ? '<a class="chatbar lift" href="' + esc(chat.url) + '" target="_blank" rel="noopener"><span class="ic">' + svgI('chat') + '</span><span><b>Message ' + esc(chat.name) + '</b><small>Say hi or reply to a post in the family chat</small></span><span class="go" aria-hidden="true">→</span></a>' : '') +
     '<div class="journal-list">' + j.map(e =>
-    '<article class="entry lift" id="j-' + esc(e.id) + '">' + (e.photo ? '<img loading="lazy" src="' + esc(e.photo) + '" alt="' + esc(e.title) + '">' : '') +
+    '<article class="entry lift" id="j-' + esc(e.id) + '">' + galleryHTML(e) +
     '<div class="body"><div class="when">' + esc(fmtTime(e.time)) + (e.place ? ' · ' + esc(e.place) : '') + '</div>' +
     '<h3>' + esc(e.title) + '</h3><p>' + esc(e.text) + '</p>' +
     '<div class="btnrow entry-actions">' +
       '<button class="mini share" data-act="reply" data-id="' + esc(e.id) + '">' + svgI('chat') + 'Reply</button>' +
       '<button class="mini share" data-act="share" data-id="' + esc(e.id) + '">' + svgI('share') + 'Share</button>' +
       (e.lat != null && e.lat !== '' ? '<button class="mini" data-act="focusj" data-id="' + esc(e.id) + '">Show on map</button>' : '') +
+      (state.unlocked ? '<button class="mini share" data-act="edit" data-kind="journal" data-id="' + esc(e.id) + '">' + svgI('edit') + 'Edit</button>' : '') +
       (state.unlocked && !e.public ? '<span class="chip">Only visible to you</span>' : '') +
     '</div></div></article>').join('') + '</div></section>';
 }
@@ -1698,12 +1746,12 @@ function moneyHTML() {
         let j = i - 1, litres = x.litres; while (j >= 0 && !f[j].full) { litres += f[j].litres; j--; }
         if (j >= 0 && x.odo > f[j].odo) eco = n1(litres / (x.odo - f[j].odo) * 100);
       }
-      return '<tr><td>' + esc(fmtDay((x.time || '').slice(0, 10))) + '</td><td>' + esc(x.place) + '</td><td class="r">' + (x.odo ? n0(x.odo) : '') + '</td><td class="r">' + n1(x.litres) + '</td><td class="r">' + (x.price ? x.price.toFixed(2) : '') + '</td><td class="r">' + money2(x.total || 0) + '</td><td class="r">' + eco + '</td></tr>';
+      return '<tr class="rowlink" data-act="edit" data-kind="fuel" data-id="' + esc(x.id) + '"><td>' + esc(fmtDay((x.time || '').slice(0, 10))) + '</td><td>' + esc(x.place) + '</td><td class="r">' + (x.odo ? n0(x.odo) : '') + '</td><td class="r">' + n1(x.litres) + '</td><td class="r">' + (x.price ? x.price.toFixed(2) : '') + '</td><td class="r">' + money2(x.total || 0) + '</td><td class="r">' + eco + '</td></tr>';
     }).join('') + '</tbody></table></div>' : '<div class="empty">No fills yet. Log one from the Log tab.</div>') + '</section>';
   const recent = ex.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 25);
   h += '<section class="section"><h2>Recent expenses</h2>' + (recent.length ? '<div class="tablewrap"><table><thead><tr><th>Date</th><th>What</th><th>Category</th><th class="r">Amount</th></tr></thead><tbody>' +
-    recent.map(x => '<tr><td>' + esc(fmtDay(x.date)) + '</td><td>' + esc(x.description || '') + (x.paidBy ? ' <span class="muted">(' + esc(x.paidBy) + ')</span>' : '') + '</td><td>' + esc(x.category) + '</td><td class="r">' + money2(x.amount || 0) + '</td></tr>').join('') +
-    '</tbody></table></div>' : '<div class="empty">Nothing spent yet.</div>') + '<p class="fineprint">Everything here is private: family see the map, trip and journal only.</p></section>';
+    recent.map(x => '<tr class="rowlink" data-act="edit" data-kind="' + (/^X/.test(x.id) && x.category === 'Fuel' ? 'fuel' : 'expense') + '" data-id="' + esc(/^X/.test(x.id) && x.category === 'Fuel' ? x.id.slice(1) : x.id) + '"><td>' + esc(fmtDay(x.date)) + '</td><td>' + esc(x.description || '') + (x.paidBy ? ' <span class="muted">(' + esc(x.paidBy) + ')</span>' : '') + '</td><td>' + esc(x.category) + '</td><td class="r">' + money2(x.amount || 0) + '</td></tr>').join('') +
+    '</tbody></table></div>' : '<div class="empty">Nothing spent yet.</div>') + '<p class="fineprint">Tap any row to edit or delete it. Everything here is private: family see the map, trip and journal only.</p></section>';
   return h;
 }
 
@@ -1723,6 +1771,9 @@ const ICONS = {
   stop: '<path d="M12 5v14M5 12h14"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  play: '<path d="M8 5v14l11-7z" fill="currentColor"/>',
+  trash: '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   chat: '<path d="M4 5h16v11H9l-5 4z"/>',
   share: '<path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v7h14v-7"/>',
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
@@ -1771,111 +1822,188 @@ function locHTML() {
   '</div>';
 }
 function updateLoc() { const el = $('#locBox'); if (el) el.outerHTML = locHTML(); }
-function photoHTML() {
-  return state.photo
-    ? '<div class="photoprev"><img src="' + state.photo + '" alt="Selected photo"><button type="button" class="mini" data-act="nophoto">Remove</button></div>'
-    : '<label class="photozone">' + svgI('camera') + '<b>Add a photo</b><span class="small">Take one now or choose from your phone</span><input type="file" id="j-photo" accept="image/*"></label>';
-}
 function chip(name, val, checked) {
   return '<label class="chipbtn"><input type="radio" name="' + name + '" value="' + esc(val) + '"' + (checked ? ' checked' : '') + '><span>' + esc(val) + '</span></label>';
 }
-function paidChips(name) {
+function paidChips(name, preset) {
   const t = settings().travellers.filter(n => !/partner/i.test(n));
   const opts = ['Joint'].concat(t.length ? t : []);
-  const pick = opts.includes(state.lastPaid) ? state.lastPaid : 'Joint';
+  if (preset && !opts.includes(preset)) opts.push(preset);
+  const pick = preset || (opts.includes(state.lastPaid) ? state.lastPaid : 'Joint');
   return '<div class="field"><span class="lbl">Paid by</span><div class="chips" role="radiogroup" aria-label="Paid by">' + opts.map(o => chip(name, o, o === pick)).join('') + '</div></div>';
 }
 function localNow() { const d = new Date(now().getTime() - now().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
-function whenField() { return '<div class="field"><label for="when">When</label><input id="when" type="datetime-local" value="' + localNow() + '" max="' + localNow() + '"><p class="hint">Leave as now, or change it if you’re catching up on an earlier day.</p></div>'; }
+function whenField(iso) { return '<div class="field"><label for="when">When</label><input id="when" type="datetime-local" value="' + (iso ? isoToLocal(iso) : localNow()) + '" max="' + localNow() + '"><p class="hint">Leave as now, or change it if you’re catching up on an earlier day.</p></div>'; }
 function submitBtn(label, icon) { return '<button class="btn primary big" type="submit">' + (icon ? svgI(icon) : '') + '<span>' + label + '</span></button>'; }
 
+/* ---------- Editing helpers ---------- */
+const KIND_ARR = { journal: 'journal', checkin: 'checkins', fuel: 'fuel', expense: 'expenses', stop: 'stops' };
+const KIND_NOUN = { journal: 'journal entry', checkin: 'check-in', fuel: 'fill-up', expense: 'expense', stop: 'stop' };
+function editRec() {
+  if (!state.edit) return null;
+  return (state.data[KIND_ARR[state.edit.kind]] || []).find(x => x.id === state.edit.id) || null;
+}
+function isoToLocal(iso) { const d = new Date(iso); if (isNaN(d)) return localNow(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
+function mediaOf(e) { return e.media && e.media.length ? e.media : (e.photo ? [{ type: 'image', src: e.photo, thumb: e.photo }] : []); }
+/** Opens the matching Log form filled in with an existing entry. */
+function goEdit(kind, id) {
+  const seg = kind === 'stop' ? 'stop' : kind;
+  state.edit = { kind, id }; state.logSeg = seg; state.segChanged = true; state.renderedSeg = null;
+  const r = editRec(); if (!r) { state.edit = null; return; }
+  state.pick = r.lat != null && r.lat !== '' ? { lat: +r.lat, lng: +r.lng, label: r.place || r.name || 'Saved location' } : null;
+  state.loc = { status: state.pick ? 'ok' : 'idle' };
+  state.media = kind === 'journal' ? mediaOf(r).map(m => Object.assign({}, m)) : [];
+  if (state.tab !== 'log') state.tab = 'log';
+  renderHeader(); renderPanel();
+  setTimeout(() => { const f = $('#panel form.card'); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+}
+function cancelEdit() { state.edit = null; state.pick = null; state.media = []; state.loc = { status: 'idle' }; state.renderedSeg = null; renderPanel(); }
+function formHead(title) {
+  return '<div class="formhead"><h3>' + (state.edit ? 'Edit ' + title.toLowerCase() : title) + '</h3>' +
+    (state.edit ? '<button type="button" class="mini" data-act="canceledit">Cancel</button>' : '') + '</div>';
+}
+function formFoot(label, icon) {
+  if (!state.edit) return submitBtn(label, icon);
+  return '<div class="formfoot">' + submitBtn('Save changes', 'check') +
+    '<button type="button" class="btn danger big" data-act="del">' + svgI('trash') + '<span>Delete this ' + KIND_NOUN[state.edit.kind] + '</span></button></div>';
+}
+const val = x => x == null ? '' : esc(x);
+
+/* ---------- Journal photos and videos ---------- */
+const MAX_VIDEO_MB = 25;
+function mediaHTML() {
+  const m = state.media || [];
+  return '<div class="mediagrid">' + m.map((x, i) =>
+    '<div class="mtile">' + (x.type === 'video'
+      ? (x.data ? '<video src="' + x.data + '" muted playsinline></video>' : '<img src="' + esc(x.thumb || '') + '" alt="">') + '<span class="vbadge">' + svgI('play') + '</span>'
+      : '<img src="' + esc(x.data || x.thumb || x.src) + '" alt="">') +
+    '<button type="button" class="mdel" data-act="mremove" data-i="' + i + '" aria-label="Remove">×</button>' + (x.data ? '<span class="mnew">New</span>' : '') + '</div>').join('') +
+    '<label class="mtile madd">' + svgI('camera') + '<span>Add photos or videos</span><input type="file" id="j-media" accept="image/*,video/*" multiple></label></div>' +
+    '<p class="hint">Photos are shrunk to save data. Videos up to ' + MAX_VIDEO_MB + ' MB (about 20 seconds); trim longer ones in your Photos app first.</p>';
+}
+function readAsDataURL(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
+async function addMediaFiles(files) {
+  for (const f of files) {
+    try {
+      if (/^video\//.test(f.type)) {
+        if (f.size > MAX_VIDEO_MB * 1024 * 1024) { toast('That video is ' + Math.round(f.size / 1048576) + ' MB. Trim it under ' + MAX_VIDEO_MB + ' MB first.'); continue; }
+        state.media.push({ type: 'video', data: await readAsDataURL(f) });
+      } else if (/^image\//.test(f.type)) {
+        state.media.push({ type: 'image', data: await shrinkPhoto(f) });
+      }
+    } catch (e) { toast('Couldn’t read one of those files.'); }
+    $('#mediaBox').innerHTML = mediaHTML(); bindMedia();
+  }
+}
+function bindMedia() {
+  const inp = $('#j-media');
+  if (inp) inp.addEventListener('change', () => { const files = Array.from(inp.files || []); if (files.length) addMediaFiles(files); });
+}
+
+/* ---------- The Log tab ---------- */
 function logHTML() {
   const s = settings(), seg = state.logSeg, today = dayIso(now()), last = lastCheckin(), q = state.queue.length;
   const anim = seg !== state.renderedSeg ? ' formin' : '';
   state.renderedSeg = seg;
+  const r = editRec();
+  if (state.edit && !r) state.edit = null;
   let h = q ? '<div class="queue"><span>' + q + ' entr' + (q === 1 ? 'y' : 'ies') + ' waiting for phone signal</span><button type="button" data-act="flush">Send now</button></div>' : '';
   h += '<div class="actions" role="group" aria-label="What to log">' + ACTIONS.map(([k, t, sub, c]) =>
-    '<button type="button" class="action" data-seg="' + k + '" aria-pressed="' + (seg === k) + '" style="--ac:' + c + '"><span class="ic">' + svgI(k) + '</span><b>' + t + '</b><small>' + sub + '</small></button>').join('') + '</div>';
+    '<button type="button" class="action" data-seg="' + k + '" aria-pressed="' + (seg === k && !state.edit) + '" style="--ac:' + c + '"><span class="ic">' + svgI(k) + '</span><b>' + t + '</b><small>' + sub + '</small></button>').join('') + '</div>';
+  const cls = 'card' + anim + (state.edit ? ' editing' : '');
 
   if (seg === 'checkin') {
     state.locDefault = 'No location set yet.';
-    const next = state.data.stops.find(x => x.status === 'planned' && x.lat != null);
-    h += '<form class="card' + anim + '" id="f-checkin"><h3>Check in</h3>' +
+    const next = !state.edit && state.data.stops.find(x => x.status === 'planned' && x.lat != null);
+    h += '<form class="' + cls + '" id="f-checkin">' + formHead('Check in') +
       (next ? '<button type="button" class="arrive" data-act="arrive" data-id="' + esc(next.id) + '"><span class="pinic">' + svgI('checkin') + '</span><span><b>Arrived at ' + esc(next.name) + '</b><small>One tap, uses the stop’s location' + (next.arrive ? ' · planned for ' + esc(fmtDay(next.arrive)) : '') + '</small></span><span class="go" aria-hidden="true">→</span></button><div class="divider">or check in somewhere else</div>' : '') +
       '<div class="field"><span class="lbl">Location</span>' + locHTML() + '</div>' +
-      whenField() +
-      '<div class="field"><label for="ci-note">Note for the family (optional)</label><input id="ci-note" placeholder="Made it across the Nullarbor!"></div>' +
-      '<details class="more"><summary>Name this place yourself</summary><div><div class="field"><label for="ci-place">Place name</label><input id="ci-place" placeholder="Worked out automatically if blank"></div></div></details>' +
-      submitBtn('Save check-in', 'checkin') + '<p class="hint">Checking in within 20 km of a planned stop ticks it off.</p></form>';
+      whenField(r && r.time) +
+      '<div class="field"><label for="ci-note">Note for the family (optional)</label><input id="ci-note" value="' + val(r && r.note) + '" placeholder="Made it across the Nullarbor!"></div>' +
+      '<details class="more"' + (r && r.place ? ' open' : '') + '><summary>Name this place yourself</summary><div><div class="field"><label for="ci-place">Place name</label><input id="ci-place" value="' + val(r && r.place) + '" placeholder="Worked out automatically if blank"></div></div></details>' +
+      formFoot('Save check-in', 'checkin') + (state.edit ? '' : '<p class="hint">Checking in within 20 km of a planned stop ticks it off.</p>') + '</form>';
   } else if (seg === 'journal') {
     state.locDefault = last ? 'Will pin at the last check-in: ' + (last.place || 'last location') + '.' : 'Use GPS or pick a spot to pin it on the map.';
-    h += '<form class="card' + anim + '" id="f-journal"><h3>Journal entry</h3>' +
-      '<div class="field"><label for="j-title">Title</label><input id="j-title" required placeholder="Sunset at Lucky Bay"></div>' +
-      '<div class="field"><label for="j-text">What happened</label><textarea id="j-text" placeholder="Write as much or as little as you like…"></textarea></div>' +
-      '<div class="field"><span class="lbl">Photo</span><div id="photoBox">' + photoHTML() + '</div></div>' +
+    h += '<form class="' + cls + '" id="f-journal">' + formHead('Journal entry') +
+      '<div class="field"><label for="j-title">Title</label><input id="j-title" required value="' + val(r && r.title) + '" placeholder="Sunset at Lucky Bay"></div>' +
+      '<div class="field"><label for="j-text">What happened</label><textarea id="j-text" placeholder="Write as much or as little as you like…">' + val(r && r.text) + '</textarea></div>' +
+      '<div class="field"><span class="lbl">Photos and videos</span><div id="mediaBox">' + mediaHTML() + '</div></div>' +
       '<div class="field"><span class="lbl">Pin it at</span>' + locHTML() + '</div>' +
-      whenField() +
-      '<label class="switch"><input type="checkbox" id="j-public" checked><span class="track"></span><span>Family can see this</span></label>' +
-      submitBtn('Post to journal', 'journal') + '</form>';
+      whenField(r && r.time) +
+      '<label class="switch"><input type="checkbox" id="j-public"' + (!r || r.public !== false ? ' checked' : '') + '><span class="track"></span><span>Family can see this</span></label>' +
+      formFoot('Post to journal', 'journal') + '</form>';
   } else if (seg === 'fuel') {
-    const lf = (state.data.fuel || []).filter(x => x.odo).sort((a, b) => a.odo - b.odo).pop();
-    h += '<form class="card' + anim + '" id="f-fuel"><h3>Fuel fill-up</h3>' +
-      (lf ? '<p class="hint">Last fill: <b>' + n0(lf.odo) + ' km</b> at ' + esc(lf.place || '—') + ' · $' + (+lf.price).toFixed(2) + '/L</p>' : '') +
+    const lf = (state.data.fuel || []).filter(x => x.odo && (!r || x.id !== r.id)).sort((a, b) => a.odo - b.odo).pop();
+    const xp = r ? (state.data.expenses || []).find(x => x.id === 'X' + r.id) : null;
+    const computed = r ? +(r.litres * r.price).toFixed(2) : 0;
+    h += '<form class="' + cls + '" id="f-fuel">' + formHead('Fuel fill-up') +
+      (lf && !r ? '<p class="hint">Last fill: <b>' + n0(lf.odo) + ' km</b> at ' + esc(lf.place || '—') + ' · $' + (+lf.price).toFixed(2) + '/L</p>' : '') +
       '<div class="three">' +
-      '<div class="field"><label for="fu-odo">Odometer km</label><input id="fu-odo" type="number" inputmode="numeric" step="1" required placeholder="' + (lf ? 'Over ' + n0(lf.odo) : 'e.g. 41250') + '"></div>' +
-      '<div class="field"><label for="fu-l">Litres</label><input id="fu-l" type="number" inputmode="decimal" step="0.01" required placeholder="0.00"></div>' +
-      '<div class="field"><label for="fu-p">$ per litre</label><input id="fu-p" type="number" inputmode="decimal" step="0.001" required value="' + (lf ? (+lf.price).toFixed(2) : s.price.toFixed(2)) + '"></div></div>' +
+      '<div class="field"><label for="fu-odo">Odometer km</label><input id="fu-odo" type="number" inputmode="numeric" step="1" required value="' + val(r && r.odo) + '" placeholder="' + (lf ? 'Over ' + n0(lf.odo) : 'e.g. 41250') + '"></div>' +
+      '<div class="field"><label for="fu-l">Litres</label><input id="fu-l" type="number" inputmode="decimal" step="0.01" required value="' + val(r && r.litres) + '" placeholder="0.00"></div>' +
+      '<div class="field"><label for="fu-p">$ per litre</label><input id="fu-p" type="number" inputmode="decimal" step="0.001" required value="' + (r ? val(r.price) : (lf ? (+lf.price).toFixed(2) : s.price.toFixed(2))) + '"></div></div>' +
       '<div class="totalbox"><span class="lbl">Total</span><b id="fu-total">$0.00</b></div>' +
-      '<div class="field"><label for="fu-place">Where</label><input id="fu-place" value="' + esc(last ? last.place || '' : '') + '" placeholder="Nullarbor Roadhouse"></div>' +
-      paidChips('fu-paid') +
-      '<label class="switch"><input type="checkbox" id="fu-full" checked><span class="track"></span><span>Filled to full <span class="muted small">(gives your real L/100km)</span></span></label>' +
-      '<details class="more"><summary>Receipt total is different</summary><div><div class="field"><label for="fu-t">Receipt total $</label><input id="fu-t" type="number" inputmode="decimal" step="0.01"></div></div></details>' +
-      submitBtn('Save fill-up', 'fuel') + '<p class="hint">Also added to expenses under Fuel.</p></form>';
+      '<div class="field"><label for="fu-place">Where</label><input id="fu-place" value="' + val(r ? r.place : (last ? last.place || '' : '')) + '" placeholder="Nullarbor Roadhouse"></div>' +
+      whenField(r && r.time) +
+      paidChips('fu-paid', xp && xp.paidBy) +
+      '<label class="switch"><input type="checkbox" id="fu-full"' + (!r || r.full ? ' checked' : '') + '><span class="track"></span><span>Filled to full <span class="muted small">(gives your real L/100km)</span></span></label>' +
+      '<details class="more"' + (r && Math.abs((r.total || 0) - computed) > 0.01 ? ' open' : '') + '><summary>Receipt total is different</summary><div><div class="field"><label for="fu-t">Receipt total $</label><input id="fu-t" type="number" inputmode="decimal" step="0.01" value="' + (r && Math.abs((r.total || 0) - computed) > 0.01 ? val(r.total) : '') + '"></div></div></details>' +
+      formFoot('Save fill-up', 'fuel') + (state.edit ? '' : '<p class="hint">Also added to expenses under Fuel.</p>') + '</form>';
   } else if (seg === 'expense') {
     const cats = (state.data.budget || []).map(b => b.category).filter(c => c && c !== 'Fuel');
     const list = cats.length ? cats : ['Camping', 'Food & groceries', 'Eating out', 'Activities & tours', 'Other'];
-    const cur = list.includes(state.lastCat) ? state.lastCat : list[0];
-    h += '<form class="card' + anim + '" id="f-expense"><h3>Expense</h3>' +
-      '<div class="field"><label for="ex-amt">Amount $</label><input id="ex-amt" class="big-input" type="number" inputmode="decimal" step="0.01" required placeholder="0.00"></div>' +
+    if (r && r.category && !list.includes(r.category)) list.push(r.category);
+    const cur = r ? r.category : (list.includes(state.lastCat) ? state.lastCat : list[0]);
+    h += '<form class="' + cls + '" id="f-expense">' + formHead('Expense') +
+      '<div class="field"><label for="ex-amt">Amount $</label><input id="ex-amt" class="big-input" type="number" inputmode="decimal" step="0.01" required value="' + val(r && r.amount) + '" placeholder="0.00"></div>' +
       '<div class="field"><span class="lbl">Category</span><div class="chips" role="radiogroup" aria-label="Category">' + list.map(c => chip('ex-cat', c, c === cur)).join('') + '</div></div>' +
-      '<div class="field"><label for="ex-desc">What for</label><input id="ex-desc" placeholder="2 nights, Esperance caravan park"></div>' +
-      paidChips('ex-paid') +
-      '<div class="two"><div class="field"><label for="ex-place">Where</label><input id="ex-place" value="' + esc(last ? last.place || '' : '') + '"></div>' +
-      '<div class="field"><label for="ex-date">Date</label><input id="ex-date" type="date" value="' + today + '"></div></div>' +
-      submitBtn('Save expense', 'expense') + '</form>';
+      '<div class="field"><label for="ex-desc">What for</label><input id="ex-desc" value="' + val(r && r.description) + '" placeholder="2 nights, Esperance caravan park"></div>' +
+      paidChips('ex-paid', r && r.paidBy) +
+      '<div class="two"><div class="field"><label for="ex-place">Where</label><input id="ex-place" value="' + val(r ? r.place : (last ? last.place || '' : '')) + '"></div>' +
+      '<div class="field"><label for="ex-date">Date</label><input id="ex-date" type="date" value="' + (r ? val(r.date) : today) + '"></div></div>' +
+      formFoot('Save expense', 'expense') + '</form>';
   } else {
     state.locDefault = DEMO ? 'In this preview, pick the spot on the map.' : 'Found from the name, or set it exactly here.';
     const stops = state.data.stops, lastVisited = stops.filter(x => x.status === 'visited').pop();
-    h += '<form class="card' + anim + '" id="f-stop"><h3>Add a stop or detour</h3><p class="hint">It slots into the route, and the map and fuel plan update straight away.</p>' +
-      '<div class="field"><label for="st-name">Place</label><input id="st-name" required placeholder="Hamelin Pool, WA"></div>' +
-      '<div class="field"><label for="st-after">Comes after</label><select id="st-after">' + stops.map(x => '<option value="' + esc(x.id) + '"' + (lastVisited && x.id === lastVisited.id ? ' selected' : '') + '>' + esc((x.arrive ? fmtDay(x.arrive, false) + ' · ' : '') + x.name) + '</option>').join('') + '</select></div>' +
-      '<div class="two"><div class="field"><label for="st-date">Arrive</label><input id="st-date" type="date"></div><div class="field"><label for="st-nights">Nights</label><input id="st-nights" type="number" min="0" step="1" value="1"></div></div>' +
-      '<div class="field"><label for="st-camp">Campsite (optional)</label><input id="st-camp"></div>' +
+    h += '<form class="' + cls + '" id="f-stop">' + formHead(state.edit ? 'Stop' : 'Add a stop or detour') +
+      (state.edit ? '' : '<p class="hint">It slots into the route, and the map and fuel plan update straight away.</p>') +
+      '<div class="field"><label for="st-name">Place</label><input id="st-name" required value="' + val(r && r.name) + '" placeholder="Hamelin Pool, WA"></div>' +
+      (state.edit ? '' : '<div class="field"><label for="st-after">Comes after</label><select id="st-after">' + stops.map(x => '<option value="' + esc(x.id) + '"' + (lastVisited && x.id === lastVisited.id ? ' selected' : '') + '>' + esc((x.arrive ? fmtDay(x.arrive, false) + ' · ' : '') + x.name) + '</option>').join('') + '</select></div>') +
+      '<div class="two"><div class="field"><label for="st-date">Arrive</label><input id="st-date" type="date" value="' + val(r && r.arrive) + '"></div><div class="field"><label for="st-nights">Nights</label><input id="st-nights" type="number" min="0" step="1" value="' + (r ? val(r.nights || 0) : '1') + '"></div></div>' +
+      '<div class="field"><label for="st-camp">Campsite (optional)</label><input id="st-camp" value="' + val(r && r.campsite) + '"></div>' +
+      (state.edit ? '<div class="field"><label for="st-plan">Plan</label><textarea id="st-plan" style="min-height:90px">' + val(r && r.plan) + '</textarea></div>' +
+        '<div class="field"><label for="st-notes">Notes</label><input id="st-notes" value="' + val(r && r.notes) + '"></div>' +
+        '<div class="field"><span class="lbl">Status</span><div class="chips">' + ['planned', 'visited', 'skipped'].map(x => chip('st-status', x[0].toUpperCase() + x.slice(1), r && r.status === x)).join('') + '</div></div>' : '') +
       '<div class="field"><span class="lbl">Location</span>' + locHTML() + '</div>' +
-      '<div class="switches"><label class="switch"><input type="checkbox" id="st-detour" checked><span class="track"></span><span>Detour (not in the original plan)</span></label>' +
-      '<label class="switch"><input type="checkbox" id="st-remote"><span class="track"></span><span>Remote fuel prices on the way</span></label></div>' +
-      submitBtn('Add to route', 'stop') + '</form>';
+      '<div class="switches">' +
+      (state.edit ? '<label class="switch"><input type="checkbox" id="st-booked"' + (r && r.booked ? ' checked' : '') + '><span class="track"></span><span>Booked</span></label>'
+        : '<label class="switch"><input type="checkbox" id="st-detour" checked><span class="track"></span><span>Detour (not in the original plan)</span></label>') +
+      '<label class="switch"><input type="checkbox" id="st-remote"' + (r && r.remote ? ' checked' : '') + '><span class="track"></span><span>Remote fuel prices on the way</span></label></div>' +
+      formFoot('Add to route', 'stop') + '</form>';
   }
-  h += '<section class="section"><h2>Logged recently</h2>' + recentHTML() + '</section>';
+  h += '<section class="section"><div class="sechead"><h2>Everything we’ve logged</h2><span class="hint">Tap any entry to edit or delete it</span></div>' + allEntriesHTML() + '</section>';
   h += '<div class="slot slot-log" id="mapSlot" data-mode="log"></div>';
   return h;
 }
-function recentHTML() {
+function allEntriesHTML() {
   const d = state.data, t = now(), items = [];
-  d.checkins.forEach(c => items.push({ k: 'checkin', time: c.time, title: 'Checked in · ' + (c.place || 'on the road'), sub: c.note || '' }));
-  d.journal.forEach(j => items.push({ k: 'journal', time: j.time, title: j.title || 'Journal entry', sub: j.place || '' }));
-  (d.fuel || []).forEach(f => items.push({ k: 'fuel', time: f.time, title: n1(f.litres) + ' L at ' + (f.place || '—'), sub: money2(f.total || 0) }));
-  (d.expenses || []).filter(x => x.category !== 'Fuel').forEach(x => items.push({ k: 'expense', time: x.date + 'T12:00:00', title: x.description || x.category, sub: money2(x.amount || 0) + ' · ' + x.category }));
+  d.checkins.forEach(c => items.push({ k: 'checkin', id: c.id, time: c.time, title: 'Checked in · ' + (c.place || 'on the road'), sub: c.note || '' }));
+  d.journal.forEach(j => items.push({ k: 'journal', id: j.id, time: j.time, title: j.title || 'Journal entry', sub: [j.place, mediaOf(j).length ? mediaOf(j).length + ' photo' + (mediaOf(j).length > 1 ? 's/videos' : '') : ''].filter(Boolean).join(' · ') }));
+  (d.fuel || []).forEach(f => items.push({ k: 'fuel', id: f.id, time: f.time, title: n1(f.litres) + ' L at ' + (f.place || '—'), sub: money2(f.total || 0) }));
+  (d.expenses || []).filter(x => x.category !== 'Fuel').forEach(x => items.push({ k: 'expense', id: x.id, time: x.date + 'T12:00:00', title: x.description || x.category, sub: money2(x.amount || 0) + ' · ' + x.category }));
   items.sort((a, b) => new Date(b.time) - new Date(a.time));
-  if (!items.length) return '<div class="empty">Nothing logged yet. Your entries will show here.</div>';
-  return '<div class="recent">' + items.slice(0, 6).map(i => '<div class="recent-row"><span class="ic" style="--ac:' + ACOL[i.k] + '">' + svgI(i.k) + '</span><div style="min-width:0"><b>' + esc(i.title) + '</b>' + (i.sub ? '<small>' + esc(i.sub) + '</small>' : '') + '</div><time>' + esc(ago(i.time, t)) + '</time></div>').join('') + '</div>';
+  const f = state.listFilter || 'all';
+  const shown = items.filter(i => f === 'all' || i.k === f);
+  const filters = [['all', 'All'], ['checkin', 'Check-ins'], ['journal', 'Journal'], ['fuel', 'Fuel'], ['expense', 'Expenses']];
+  let h = '<div class="chips filterchips">' + filters.map(([k, l]) => '<label class="chipbtn"><input type="radio" name="lf" value="' + k + '"' + (f === k ? ' checked' : '') + ' data-act="filter"><span>' + l + '</span></label>').join('') + '</div>';
+  if (!shown.length) return h + '<div class="empty">Nothing here yet. Your entries will show up here.</div>';
+  const lim = state.listAll ? shown.length : 8;
+  h += '<div class="recent">' + shown.slice(0, lim).map(i => '<button type="button" class="recent-row" data-act="edit" data-kind="' + i.k + '" data-id="' + esc(i.id) + '"><span class="ic" style="--ac:' + ACOL[i.k] + '">' + svgI(i.k) + '</span><span style="min-width:0"><b>' + esc(i.title) + '</b>' + (i.sub ? '<small>' + esc(i.sub) + '</small>' : '') + '</span><span class="rt"><time>' + esc(ago(i.time, t)) + '</time>' + svgI('edit') + '</span></button>').join('') + '</div>';
+  if (shown.length > lim) h += '<button type="button" class="btn ghost" data-act="listall">Show all ' + shown.length + '</button>';
+  return h;
 }
 function bindLog(changed) {
-  const ph = $('#j-photo');
-  if (ph) ph.addEventListener('change', async () => {
-    const f = ph.files && ph.files[0]; if (!f) return;
-    try { state.photo = await shrinkPhoto(f); $('#photoBox').innerHTML = photoHTML(); } catch (e) { toast('Could not read that photo. Try a JPG or PNG.'); }
-  });
+  bindMedia();
   const fl = $('#fu-l'), fp = $('#fu-p'), ft = $('#fu-t');
   if (fl) {
     const upd = () => { const v = +ft.value || (+fl.value * +fp.value) || 0; $('#fu-total').textContent = money2(v); };
@@ -1928,7 +2056,8 @@ function applyLocal(action, p) {
     d.stops.forEach(s => { if (s.status === 'planned' && s.lat != null) { const k = haversine(s, p); if (k < 20 && (!best || k < best.k)) best = { s, k }; } });
     if (best) best.s.status = 'visited';
   } else if (action === 'journal' && !has(d.journal, p.id)) {
-    d.journal.push({ id: p.id, time: p.time, title: p.title, text: p.text, lat: p.lat, lng: p.lng, place: p.place || '', photo: p.photo || '', public: p.public });
+    const media = (p.media || []).map(m => ({ type: m.type || (/^data:video/.test(m.data) ? 'video' : 'image'), data: m.data, src: m.data, thumb: m.data }));
+    d.journal.push({ id: p.id, time: p.time, title: p.title, text: p.text, lat: p.lat, lng: p.lng, place: p.place || '', media, photo: (media.find(m => m.type === 'image') || {}).src || '', public: p.public });
   } else if (action === 'fuel' && !has(d.fuel, p.id)) {
     const total = +p.total || +(p.litres * p.price).toFixed(2);
     (d.fuel = d.fuel || []).push({ id: p.id, time: p.time, odo: +p.odo, litres: +p.litres, price: +p.price, total, place: p.place, full: p.full });
@@ -1941,18 +2070,53 @@ function applyLocal(action, p) {
     d.stops.splice(i + 1, 0, { id: p.id, _pid: p.id, name: p.name, arrive: p.arrive || '', nights: +p.nights || 0, campsite: p.campsite || '', plan: '', notes: lat == null ? 'Location will be found from the name when this syncs' : '', lat, lng, status: 'planned', booked: false, remote: !!p.remote, travel: 'drive', type: p.type });
   } else if (action === 'stopStatus') {
     const s = d.stops.find(x => x.id === p.id); if (s) s.status = p.status;
+  } else if (action === 'editJournal') {
+    const e = d.journal.find(x => x.id === p.id); if (!e) return;
+    const kept = (p.keep || []).map(id => mediaOf(e).find(m => m.id === id)).filter(Boolean);
+    const added = (p.media || []).map(m => ({ type: m.type || (/^data:video/.test(m.data) ? 'video' : 'image'), data: m.data, src: m.data, thumb: m.data }));
+    Object.assign(e, { title: p.title, text: p.text, time: p.time || e.time, lat: p.lat, lng: p.lng, public: p.public, media: kept.concat(added) });
+    if (p.place !== undefined) e.place = p.place || e.place;
+    e.photo = (e.media.find(m => m.type === 'image') || {}).src || '';
+  } else if (action === 'editCheckin') {
+    const c = d.checkins.find(x => x.id === p.id); if (!c) return;
+    if (c.lat !== p.lat || c.lng !== p.lng) c.poly = '';
+    Object.assign(c, { time: p.time || c.time, lat: p.lat, lng: p.lng, note: p.note, place: p.place || c.place });
+    sortData(d);
+  } else if (action === 'editFuel') {
+    const f = (d.fuel || []).find(x => x.id === p.id); if (!f) return;
+    const total = +p.total || +(p.litres * p.price).toFixed(2);
+    Object.assign(f, { time: p.time || f.time, odo: +p.odo, litres: +p.litres, price: +p.price, total, place: p.place, full: p.full });
+    const x = (d.expenses || []).find(e => e.id === 'X' + p.id);
+    if (x) Object.assign(x, { amount: total, description: p.litres + ' L diesel', paidBy: p.paidBy, place: p.place, date: (p.time || f.time || '').slice(0, 10) });
+  } else if (action === 'editExpense') {
+    const x = (d.expenses || []).find(e => e.id === p.id); if (!x) return;
+    Object.assign(x, { amount: +p.amount, date: p.date, category: p.category, description: p.description, paidBy: p.paidBy, place: p.place });
+  } else if (action === 'editStop') {
+    const st = d.stops.find(x => x.id === p.id); if (!st) return;
+    ['name', 'arrive', 'campsite', 'plan', 'notes', 'status'].forEach(k => { if (p[k] !== undefined) st[k] = p[k]; });
+    if (p.nights !== undefined) st.nights = +p.nights || 0;
+    if (p.booked !== undefined) st.booked = !!p.booked;
+    if (p.remote !== undefined) st.remote = !!p.remote;
+    if (p.lat != null) { st.lat = p.lat; st.lng = p.lng; }
+  } else if (action === 'delete') {
+    const arr = d[KIND_ARR[p.kind]]; if (!arr) return;
+    const i = arr.findIndex(x => x.id === p.id); if (i > -1) arr.splice(i, 1);
+    if (p.kind === 'fuel' && d.expenses) { const j = d.expenses.findIndex(x => x.id === 'X' + p.id); if (j > -1) d.expenses.splice(j, 1); }
+    if (p.kind === 'checkin') { const nx = d.checkins.find(c => new Date(c.time) > new Date(p.time || 0)); if (nx) nx.poly = ''; }
   }
 }
 async function save(action, payload) {
+  const editing = /^edit|^delete$/.test(action);
   payload.id = payload.id || uid(action[0].toUpperCase());
-  payload.time = payload.time || (DEMO ? new Date(now().getTime() + 60000) : new Date()).toISOString();
+  if (!editing) payload.time = payload.time || (DEMO ? new Date(now().getTime() + 60000) : new Date()).toISOString();
   applyLocal(action, payload);
-  state.pick = null; state.photo = null; state.loc = { status: 'done' };
+  state.pick = null; state.media = []; state.loc = { status: 'done' };
+  const wasEdit = !!state.edit; state.edit = null; state.renderedSeg = null;
   render();
-  flashSaved();
-  if (DEMO) { toast('Saved in this preview. Connect your Sheet to save for real.', true); return; }
+  if (!wasEdit) flashSaved();
+  if (DEMO) { toast(action === 'delete' ? 'Deleted (in this preview).' : wasEdit ? 'Changes saved (in this preview).' : 'Saved in this preview. Connect your Sheet to save for real.', true); return; }
   state.queue.push({ action, payload });
-  if (!LS.set('hl27_queue', state.queue)) toast('Saved, but too big to keep offline. Keep this page open until it sends.');
+  persistQueue();
   await flush(true);
 }
 let flushing = false;
@@ -1974,7 +2138,7 @@ async function flush(fromSave) {
         state.data = sortData(j.data); state.unlocked = true;
         LS.set('hl27_cache', j.data);
       }
-      LS.set('hl27_queue', state.queue);
+      persistQueue();
     } catch (e) { failedNet = true; break; }
   }
   flushing = false;
@@ -1983,11 +2147,35 @@ async function flush(fromSave) {
   if (failedNet && fromSave) toast('No signal. Saved on this phone and will send when you\'re back in range.');
   else if (sent) toast(sent === 1 ? 'Saved to the Sheet.' : sent + ' entries saved to the Sheet.', true);
 }
+/* Offline queue: kept in the phone's database so photos and videos survive no-signal stretches */
+const IDB = {
+  db() { return this._db || (this._db = new Promise((res, rej) => { const r = indexedDB.open('hl27', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); })); },
+  async get(k) { const db = await this.db(); return new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); },
+  async set(k, v) { const db = await this.db(); return new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); }
+};
+function persistQueue() {
+  IDB.set('queue', state.queue).catch(() => { if (!LS.set('hl27_queue', state.queue)) toast('Saved, but too big to keep offline. Keep the app open until it sends.'); });
+  LS.set('hl27_queue', []);
+}
+async function restoreQueue() {
+  try { const q = await IDB.get('queue'); if (Array.isArray(q) && q.length) state.queue = q.concat(state.queue.filter(x => !q.some(y => y.payload.id === x.payload.id && y.action === x.action))); } catch (e) {}
+}
 function lockPhone() { state.pin = ''; state.unlocked = false; LS.set('hl27_pin', ''); }
 
 /* =========================================================
    SHARING journal posts to group chats
    ========================================================= */
+/** Swipeable photos and videos for a journal post. Drive videos load their player only when tapped. */
+function galleryHTML(e) {
+  const m = mediaOf(e);
+  if (!m.length) return '';
+  const slide = x => x.type === 'video'
+    ? (x.data ? '<video src="' + x.data + '" controls playsinline preload="metadata"></video>'
+      : '<button type="button" class="vposter" data-act="playvid" data-src="' + esc(x.src) + '" aria-label="Play video"><img loading="lazy" src="' + esc(x.thumb || '') + '" alt=""><span class="vplay">' + svgI('play') + '</span></button>')
+    : '<img loading="lazy" src="' + esc(x.src || x.data) + '" alt="' + esc(e.title) + '">';
+  return '<div class="gallery"><div class="gtrack">' + m.map(x => '<div class="gslide">' + slide(x) + '</div>').join('') + '</div>' +
+    (m.length > 1 ? '<span class="gcount">' + m.length + ' · swipe</span>' : '') + '</div>';
+}
 function familyChat() {
   const s = state.data.settings || {};
   return s.familyChatUrl ? { url: String(s.familyChatUrl), name: String(s.familyChatName || 'the family chat') } : null;
@@ -2047,7 +2235,7 @@ document.addEventListener('click', e => {
   const tabBtn = e.target.closest('#tabs button');
   if (tabBtn) { goTab(tabBtn.dataset.tab); return; }
   const segBtn = e.target.closest('[data-seg]');
-  if (segBtn) { if (state.logSeg !== segBtn.dataset.seg) { state.logSeg = segBtn.dataset.seg; state.loc = { status: 'idle' }; state.segChanged = true; } renderPanel(); return; }
+  if (segBtn) { if (state.edit) { state.edit = null; state.pick = null; state.media = []; state.renderedSeg = null; } if (state.logSeg !== segBtn.dataset.seg) { state.logSeg = segBtn.dataset.seg; state.loc = { status: 'idle' }; state.segChanged = true; } renderPanel(); return; }
   const go = e.target.closest('[data-goto]');
   if (go) { goTab(go.dataset.goto); return; }
   const a = e.target.closest('[data-act]'); if (!a) return;
@@ -2070,7 +2258,20 @@ document.addEventListener('click', e => {
     else $('#mapwrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
   else if (act === 'clearpick') { state.pick = null; state.loc = { status: 'idle' }; updateLoc(); renderMap(); }
-  else if (act === 'nophoto') { state.photo = null; $('#photoBox').innerHTML = photoHTML(); bindLog(false); }
+  else if (act === 'playvid') { a.outerHTML = '<iframe src="' + esc(a.dataset.src) + '" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="Video"></iframe>'; }
+  else if (act === 'edit') { e.stopPropagation(); goEdit(a.dataset.kind, a.dataset.id); }
+  else if (act === 'canceledit') cancelEdit();
+  else if (act === 'mremove') { state.media.splice(+a.dataset.i, 1); $('#mediaBox').innerHTML = mediaHTML(); bindMedia(); }
+  else if (act === 'listall') { state.listAll = true; renderPanel(); }
+  else if (act === 'del') {
+    if (!a.classList.contains('armed')) {
+      a.classList.add('armed'); const sp = a.querySelector('span'), was = sp.textContent; sp.textContent = 'Tap again to delete';
+      setTimeout(() => { if (a.isConnected) { a.classList.remove('armed'); sp.textContent = was; } }, 3500);
+      return;
+    }
+    const ed = state.edit, rec = editRec();
+    save('delete', { kind: ed.kind, id: ed.id, time: rec && rec.time });
+  }
   else if (act === 'arrive') {
     const st = state.data.stops.find(x => x.id === a.dataset.id); if (!st) return;
     const note = ($('#ci-note') || {}).value || '';
@@ -2092,6 +2293,7 @@ document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.stop[data-act="focus"]')) { e.preventDefault(); e.target.click(); }
 });
 document.addEventListener('change', e => {
+  if (e.target.name === 'lf') { state.listFilter = e.target.value; state.listAll = false; const sec = $('#panel .recent') && $('#panel .recent').parentElement; renderPanel(); return; }
   if (e.target.id !== 'loc-stop') return;
   const st = state.data.stops.find(x => x.id === e.target.value);
   state.pick = st ? { lat: st.lat, lng: st.lng, label: st.name, stopId: st.id } : null;
@@ -2124,24 +2326,36 @@ document.addEventListener('submit', async e => {
     } catch (err) { toast('Can’t check the PIN without signal. Try again when you’re back in range.'); if (btn) btn.disabled = false; }
     return;
   }
-  const last = lastCheckin();
+  const last = lastCheckin(), ed = state.edit;
   if (f.id === 'f-checkin') {
-    let pick = state.pick;
+    const pick = state.pick;
     if (!pick) { toast('Set the location first: choose a stop, pick on the map or use GPS.'); return; }
-    await save('checkin', { lat: pick.lat, lng: pick.lng, place: v('ci-place') || (pick.stopId ? pick.label : ''), note: v('ci-note'), time: whenIso() });
-    toast('Checked in.', true);
+    const p = { lat: pick.lat, lng: pick.lng, place: v('ci-place') || (pick.stopId ? pick.label : ''), note: v('ci-note'), time: whenIso() };
+    if (ed) await save('editCheckin', Object.assign(p, { id: ed.id }));
+    else { await save('checkin', p); toast('Checked in.', true); }
   } else if (f.id === 'f-journal') {
-    const loc = state.pick || last;
-    await save('journal', { title: v('j-title'), text: v('j-text'), photo: state.photo || '', lat: loc ? loc.lat : null, lng: loc ? loc.lng : null, place: state.pick ? (state.pick.stopId ? state.pick.label : '') : (last ? last.place : ''), public: ck('j-public'), time: whenIso() });
+    const loc = state.pick || (ed ? null : last);
+    const newMedia = (state.media || []).filter(m => m.data).map(m => ({ data: m.data, type: m.type }));
+    const p = { title: v('j-title'), text: v('j-text'), lat: loc ? loc.lat : null, lng: loc ? loc.lng : null,
+      place: state.pick ? (state.pick.stopId ? state.pick.label : (ed ? state.pick.label : '')) : (!ed && last ? last.place : ''), public: ck('j-public'), time: whenIso(), media: newMedia };
+    if (ed) await save('editJournal', Object.assign(p, { id: ed.id, keep: (state.media || []).filter(m => m.id).map(m => m.id) }));
+    else await save('journal', p);
   } else if (f.id === 'f-fuel') {
     state.lastPaid = radio('fu-paid');
-    await save('fuel', { odo: +v('fu-odo'), litres: +v('fu-l'), price: +v('fu-p'), total: +v('fu-t') || null, place: v('fu-place'), full: ck('fu-full'), paidBy: radio('fu-paid'), lat: state.pick ? state.pick.lat : null, lng: state.pick ? state.pick.lng : null });
+    const p = { odo: +v('fu-odo'), litres: +v('fu-l'), price: +v('fu-p'), total: +v('fu-t') || null, place: v('fu-place'), full: ck('fu-full'), paidBy: radio('fu-paid'), time: whenIso(), lat: state.pick ? state.pick.lat : null, lng: state.pick ? state.pick.lng : null };
+    if (ed) await save('editFuel', Object.assign(p, { id: ed.id })); else await save('fuel', p);
   } else if (f.id === 'f-expense') {
     state.lastCat = radio('ex-cat'); state.lastPaid = radio('ex-paid');
-    await save('expense', { amount: +v('ex-amt'), date: v('ex-date'), category: radio('ex-cat'), description: v('ex-desc'), place: v('ex-place'), paidBy: radio('ex-paid') });
+    const p = { amount: +v('ex-amt'), date: v('ex-date'), category: radio('ex-cat'), description: v('ex-desc'), place: v('ex-place'), paidBy: radio('ex-paid') };
+    if (ed) await save('editExpense', Object.assign(p, { id: ed.id })); else await save('expense', p);
   } else if (f.id === 'f-stop') {
-    if (DEMO && !state.pick) { toast('In the preview, pick the spot on the map first.'); return; }
-    await save('addStop', { name: v('st-name'), afterId: v('st-after'), arrive: v('st-date'), nights: +v('st-nights') || 0, campsite: v('st-camp'), lat: state.pick ? state.pick.lat : null, lng: state.pick ? state.pick.lng : null, type: ck('st-detour') ? 'detour' : 'planned', remote: ck('st-remote') });
+    if (ed) {
+      await save('editStop', { id: ed.id, name: v('st-name'), arrive: v('st-date'), nights: +v('st-nights') || 0, campsite: v('st-camp'), plan: v('st-plan'), notes: v('st-notes'),
+        status: (radio('st-status') || 'Planned').toLowerCase(), booked: ck('st-booked'), remote: ck('st-remote'), lat: state.pick ? state.pick.lat : null, lng: state.pick ? state.pick.lng : null });
+    } else {
+      if (DEMO && !state.pick) { toast('In the preview, pick the spot on the map first.'); return; }
+      await save('addStop', { name: v('st-name'), afterId: v('st-after'), arrive: v('st-date'), nights: +v('st-nights') || 0, campsite: v('st-camp'), lat: state.pick ? state.pick.lat : null, lng: state.pick ? state.pick.lng : null, type: ck('st-detour') ? 'detour' : 'planned', remote: ck('st-remote') });
+    }
   }
 });
 let toastT;
@@ -2159,7 +2373,7 @@ setInterval(() => flush(false), 60000);
    LOADING
    ========================================================= */
 async function load() {
-  if (DEMO) { if (!state.data) state.data = demoData(); state.unlocked = !!state.pin; render(); return; }
+  if (DEMO) { if (!state.data) state.data = sortData(demoData()); state.unlocked = !!state.pin; render(); return; }
   if (!state.data) {
     const cached = LS.get('hl27_cache', null);
     if (cached) { state.data = sortData(cached); state.unlocked = !!(state.pin && cached.fuel); state.queue.forEach(q => applyLocal(q.action, q.payload)); render(); }
@@ -2264,7 +2478,7 @@ function demoData() {
 }
 
 /* Auto-update: compare this page's build with the one on the server and reload when it's newer */
-const BUILD = '20261018103618';
+const BUILD = '20261018104803';
 async function checkForUpdate() {
   if (DEMO || !/^https?:/.test(location.protocol)) return;
   try {
@@ -2275,7 +2489,7 @@ async function checkForUpdate() {
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
 initTabs();
-load().then(openDeepLink);
+restoreQueue().then(load).then(openDeepLink);
 checkForUpdate();
 </script>
 
