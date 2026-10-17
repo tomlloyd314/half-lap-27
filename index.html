@@ -677,8 +677,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 </style>
 <style>
-/* Layout: map fills the left (top on phones); a scrolling road-sign panel on the right (below on phones). */
-/* Layout: map fills the left (top on phones); a scrolling panel on the right (below on phones). Palette: Retro Surf, Cool Aloe leading. */
+/* Layout: one centred card ("the bubble") on a soft aloe page; title bubble, route box and stats on top, coloured tabs, then the tab's content. Palette: Retro Surf, Cool Aloe leading. */
 :root {
   --bg: #f6f1e8;            /* Coconut Milk */
   --page: #e7eee8;
@@ -687,253 +686,400 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --ink: #26302d;
   --muted: #66716d;
   --line: #e3dccd;
-  --sign: #c9d6c9;          /* Cool Aloe: header plate, tabs, leg signs, buttons */
+  --sign: #c9d6c9;          /* Cool Aloe */
   --sign-ink: #23302b;
   --sign-edge: #fffdf9;
-  --route: #5f8784;         /* deepened Faded Surf: planned route, stop dots */
+  --route: #5f8784;         /* deepened Faded Surf */
   --ferry: #91aeac;         /* Faded Surf */
-  --drive: #db9773;         /* Sunset Glow: where we've driven */
+  --drive: #db9773;         /* Sunset Glow */
   --casing: #3b2a22;
-  --warn: #e0c37e;          /* Golden Hour: you-are-here, warnings */
+  --warn: #e0c37e;          /* Golden Hour */
   --warn-ink: #2e2612;
-  --brown: #c27652;         /* Sunset Glow, deepened: journal pins */
+  --brown: #c27652;
   --peach: #e5c3ae;         /* Peach Fuzz */
   --sea: #d6e3e1;
   --land: #efe8da;
   --land-edge: #cdc4b1;
   --danger: #b5502f;
+  --ok: #4f7d64;
+  --shadow: 0 1px 2px rgba(38,48,45,.06), 0 8px 24px -12px rgba(38,48,45,.22);
+  --shadow-lift: 0 2px 4px rgba(38,48,45,.08), 0 16px 32px -14px rgba(38,48,45,.32);
+  /* tab colours */
+  --c-overview: #c9d6c9; --c-map: #91aeac; --c-trip: #e0c37e; --c-journal: #e5c3ae; --c-money: #db9773; --c-log: #5f8784; --c-crew: #5f8784;
   --f-display: "Overpass", "Arial Narrow", system-ui, sans-serif;
   --f-body: "Overpass", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-journal: "Literata", Georgia, "Times New Roman", serif;
   --f-mono: "Overpass Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --r: 10px;
+  --r: 14px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #1a2120; --page: #141a19; --panel: #1f2725; --card: #263130; --ink: #eee8dd; --muted: #a2aca8; --line: #36413e;
     --sign: #c9d6c9; --sign-ink: #23302b; --sign-edge: #f6f1e8; --route: #9fc1bd; --ferry: #91aeac;
     --drive: #db9773; --casing: #120d0a; --warn: #e0c37e; --warn-ink: #2e2612; --brown: #d08660; --peach: #e5c3ae;
-    --sea: #142120; --land: #283230; --land-edge: #44504c; --danger: #e48a68; color-scheme: dark;
+    --sea: #142120; --land: #283230; --land-edge: #44504c; --danger: #e48a68; --ok: #8fc0a3;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6); --shadow-lift: 0 2px 4px rgba(0,0,0,.35), 0 16px 32px -14px rgba(0,0,0,.7);
+    --c-log: #7fa8a4; --c-crew: #7fa8a4; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #1a2120; --page: #141a19; --panel: #1f2725; --card: #263130; --ink: #eee8dd; --muted: #a2aca8; --line: #36413e;
   --sign: #c9d6c9; --sign-ink: #23302b; --sign-edge: #f6f1e8; --route: #9fc1bd; --ferry: #91aeac;
   --drive: #db9773; --casing: #120d0a; --warn: #e0c37e; --warn-ink: #2e2612; --brown: #d08660; --peach: #e5c3ae;
-  --sea: #142120; --land: #283230; --land-edge: #44504c; --danger: #e48a68; color-scheme: dark;
+  --sea: #142120; --land: #283230; --land-edge: #44504c; --danger: #e48a68; --ok: #8fc0a3;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6); --shadow-lift: 0 2px 4px rgba(0,0,0,.35), 0 16px 32px -14px rgba(0,0,0,.7);
+  --c-log: #7fa8a4; --c-crew: #7fa8a4; color-scheme: dark;
 }
 *, *::before, *::after { box-sizing: border-box; }
-body { background: var(--page); color: var(--ink); font: 400 15px/1.5 var(--f-body); -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+body { background: var(--page); color: var(--ink); font: 400 15px/1.55 var(--f-body); -webkit-font-smoothing: antialiased; }
 button, input, select, textarea { font: inherit; color: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
 .page {
   min-height: 100vh;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 64px;
   background:
     radial-gradient(60rem 30rem at 10% -5%, color-mix(in srgb, var(--ferry) 30%, transparent), transparent 70%),
     radial-gradient(50rem 28rem at 100% 0%, color-mix(in srgb, var(--sign) 55%, transparent), transparent 70%),
     var(--page);
 }
-.shell { max-width: 1080px; margin: 0 auto; background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 18px; display: grid; gap: 16px; box-shadow: 0 18px 50px -24px rgba(38, 48, 45, .35); min-width: 0; }
+.shell { max-width: 1080px; margin: 0 auto; background: var(--panel); border: 1px solid var(--line); border-radius: 26px; padding: 28px; display: grid; gap: 22px; box-shadow: 0 24px 60px -28px rgba(38, 48, 45, .4); min-width: 0; }
 #panel { min-width: 0; }
+.stack { display: grid; gap: 28px; min-width: 0; }
 @media (max-width: 640px) {
-  .page { padding-block: 12px 32px; }
-  .shell { padding: 12px; border-radius: 18px; }
+  .page { padding-block: 14px 36px; }
+  .shell { padding: 16px; border-radius: 20px; gap: 18px; }
+  .stack { gap: 24px; }
 }
 
-/* Map container: moved between tabs */
-.mapwrap { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); height: 100%; background: var(--sea); }
-#map { position: absolute; inset: 0; background: var(--sea); }
-.slot { min-width: 0; }
-.slot-overview { height: 400px; }
-.slot-full { height: min(76svh, 820px); min-height: 460px; }
-.slot-log { height: 320px; }
-@media (max-width: 640px) { .slot-overview { height: 300px; } .slot-full { height: 70svh; min-height: 380px; } }
-.mapwrap.compact .legend, .mapwrap.compact .layers, .mapwrap.compact [data-act="fit"] { display: none; }
-.mapwrap.expanded { position: fixed; inset: 0; z-index: 3000; border-radius: 0; border: 0; height: auto; }
-.mapwrap.expanded .layers { top: calc(10px + env(safe-area-inset-top, 0px)); }
-.mapwrap.expanded .mapbtns, .mapwrap.expanded .legend { bottom: calc(22px + env(safe-area-inset-bottom, 0px)); }
-.layers { position: absolute; z-index: 500; top: 10px; left: max(10px, env(safe-area-inset-left, 0px)); display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 3px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-.layers button { border: 0; background: none; border-radius: 6px; padding: 5px 10px; font-weight: 700; font-size: 12.5px; cursor: pointer; color: var(--muted); }
-.layers button[aria-pressed="true"] { background: var(--sign); color: var(--sign-ink); }
-.mapbtns { position: absolute; z-index: 500; right: max(10px, env(safe-area-inset-right, 0px)); bottom: 22px; display: flex; gap: 6px; }
-.mapbtn.strong { background: var(--sign); color: var(--sign-ink); border-color: transparent; }
-
-/* Overview */
-.ov { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-.ov-side { display: grid; gap: 12px; min-width: 0; }
-.ov-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 4px; min-width: 0; }
-.ov-card .lbl { color: var(--muted); }
-.ov-card .big { font: 800 19px/1.2 var(--f-display); }
-.ov-card .thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; margin: 4px 0; background: var(--line); }
-.ov-card .jt { font: 600 16px/1.3 var(--f-journal); }
-.linkbtn { justify-self: start; border: 0; background: none; padding: 2px 0; color: var(--route); font-weight: 700; font-size: 13.5px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-@media (max-width: 820px) { .ov { grid-template-columns: minmax(0, 1fr); } }
-
-/* Sign plate header */
-.plate { background: var(--sign); color: var(--sign-ink); border-radius: 12px; padding: 5px; }
-.plate-in { border: 2.5px solid var(--sign-edge); border-radius: 8px; padding: 14px 16px 12px; display: grid; gap: 10px; }
-.plate h1 { margin: 0; font: 900 clamp(24px, 4.2vw, 30px)/1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
-.plate .route { font: 600 13px/1.3 var(--f-display); text-transform: uppercase; letter-spacing: .06em; opacity: .9; }
-.plate .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; border-top: 1.5px solid color-mix(in srgb, var(--sign-ink) 22%, transparent); padding-top: 10px; }
-.plate .stat b { display: block; font: 600 20px/1.1 var(--f-mono); font-variant-numeric: tabular-nums; }
-.plate .stat span { font-size: 11.5px; text-transform: uppercase; letter-spacing: .07em; opacity: .85; }
-.where { display: flex; align-items: flex-start; gap: 10px; align-items: center; font-size: 14px; }
-.where .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 40%, transparent); flex: none; }
-.banner { background: var(--warn); color: var(--warn-ink); border-radius: 8px; padding: 9px 12px; font-size: 13.5px; line-height: 1.4; }
+/* Header: title bubble, route box, stats */
+.hero { display: grid; gap: 14px; }
+.title-bubble { background: var(--sign); color: var(--sign-ink); border-radius: 20px; padding: 6px; box-shadow: var(--shadow); }
+.title-in { border: 2px solid var(--sign-edge); border-radius: 15px; padding: 26px 20px 22px; display: grid; gap: 8px; justify-items: center; text-align: center; }
+.title-bubble h1 { margin: 0; font: 900 clamp(28px, 5.4vw, 46px)/1.02 var(--f-display); text-transform: uppercase; letter-spacing: .015em; text-wrap: balance; }
+.tagline { margin: 0; font: 600 13px/1.3 var(--f-display); text-transform: uppercase; letter-spacing: .14em; opacity: .75; }
+.route-box { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 6px; }
+.route-box .rp { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 11px 3px; font: 700 12px/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .06em; color: var(--ink); cursor: pointer; position: relative; overflow: hidden; transition: background .2s var(--ease), border-color .2s var(--ease), transform .15s var(--ease); }
+.route-box .rp:hover { border-color: var(--route); transform: translateY(-1px); }
+.route-box .rp.done { background: var(--sign); border-color: transparent; color: var(--sign-ink); }
+.route-box .rp.now { background: var(--warn); border-color: transparent; color: var(--warn-ink); }
+.route-box .sep { color: var(--muted); font-size: 12px; }
+@media (max-width: 640px) { .route-box { padding: 12px; gap: 6px; } .route-box .rp { font-size: 11px; padding: 4px 9px 3px; } .route-box .sep { display: none; } }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 12px; text-align: center; display: grid; gap: 2px; }
+.stat b { font: 600 clamp(20px, 3.4vw, 26px)/1.1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.banner { background: var(--warn); color: var(--warn-ink); border-radius: 12px; padding: 12px 16px; font-size: 13.5px; line-height: 1.45; }
 .banner b { font-weight: 800; }
 
-/* Tabs */
-.tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 600; }
-@media (max-width: 640px) { .tabs { display: flex; overflow-x: auto; scrollbar-width: none; } .tabs button { flex: 0 0 auto; padding-inline: 12px; } }
-.tabs button { border: 0; background: none; padding: 8px 4px; border-radius: 7px; font: 700 13.5px/1 var(--f-display); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-.tabs button[aria-selected="true"] { background: var(--sign); color: var(--sign-ink); }
-.tabs svg { width: 12px; height: 12px; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2.5px solid var(--warn); outline-offset: 2px; }
+/* Tabs: each in its own palette colour */
+.tabs { display: flex; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 6px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 600; box-shadow: var(--shadow); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { flex: 1 0 auto; border: 0; background: none; padding: 11px 16px; border-radius: 11px; font: 800 13px/1 var(--f-display); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; position: relative; overflow: hidden; transition: background .25s var(--ease), color .25s var(--ease), transform .15s var(--ease); }
+.tabs button::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--tc); flex: none; transition: transform .25s var(--ease); }
+.tabs button:hover { background: color-mix(in srgb, var(--tc) 28%, transparent); color: var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--tc); color: var(--sign-ink); }
+.tabs button[aria-selected="true"]::before { background: var(--sign-ink); transform: scale(.7); }
+.tabs button[data-tab="log"][aria-selected="true"], .tabs button[data-tab="crew"][aria-selected="true"] { color: #fffdf9; }
+.tabs button[data-tab="log"][aria-selected="true"]::before { background: #fffdf9; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2.5px solid var(--route); outline-offset: 2px; }
 
-h2 { margin: 0; font: 800 15px/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .07em; }
-.section { display: grid; gap: 10px; }
+h2 { margin: 0; font: 800 15px/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .08em; }
+.section { display: grid; gap: 16px; min-width: 0; }
 .muted { color: var(--muted); }
-.small { font-size: 13px; }
+.small { font-size: 13.5px; }
 .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.lbl { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+/* Map container: moved between tabs */
+.mapwrap { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); height: 100%; background: var(--sea); box-shadow: var(--shadow); }
+#map { position: absolute; inset: 0; background: var(--sea); }
+.slot { min-width: 0; }
+.slot-overview { height: 440px; }
+.slot-full { height: min(76svh, 820px); min-height: 460px; }
+.slot-log { height: 0; }
+.slot-log .mapwrap:not(.expanded) { display: none; }
+@media (max-width: 640px) { .slot-overview { height: 320px; } .slot-full { height: 70svh; min-height: 380px; } }
+.mapwrap.compact .legend, .mapwrap.compact .layers, .mapwrap.compact [data-act="fit"] { display: none; }
+.mapwrap.expanded { position: fixed; inset: 0; z-index: 3000; border-radius: 0; border: 0; height: auto; display: block; }
+.mapwrap.expanded .layers { top: calc(12px + env(safe-area-inset-top, 0px)); }
+.mapwrap.expanded .mapbtns, .mapwrap.expanded .legend { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.layers { position: absolute; z-index: 500; top: 12px; left: max(12px, env(safe-area-inset-left, 0px)); display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px; box-shadow: var(--shadow); }
+.layers button { border: 0; background: none; border-radius: 8px; padding: 7px 12px; font-weight: 700; font-size: 12.5px; cursor: pointer; color: var(--muted); position: relative; overflow: hidden; transition: background .2s var(--ease), color .2s var(--ease); }
+.layers button[aria-pressed="true"] { background: var(--sign); color: var(--sign-ink); }
+.mapbtns { position: absolute; z-index: 500; right: max(12px, env(safe-area-inset-right, 0px)); bottom: 24px; display: flex; gap: 8px; }
+.mapbtn { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 13px; font-weight: 700; font-size: 12.5px; cursor: pointer; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: transform .15s var(--ease), box-shadow .2s var(--ease); }
+.mapbtn:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+.mapbtn.strong { background: var(--sign); color: var(--sign-ink); border-color: transparent; }
+
+/* Shared card look + hover lift */
+.card-look, .tile, .ov-card, .stop, .entry, .tablewrap, form.card, .pinbox, .recent { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+.lift { transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease); }
+.lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+
+/* Overview */
+.ov { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.ov-side { display: grid; gap: 16px; min-width: 0; }
+.ov-card { padding: 18px 20px; display: grid; gap: 8px; min-width: 0; }
+.ov-card .big { font: 800 20px/1.2 var(--f-display); }
+.ov-card .thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; margin: 2px 0; background: var(--line); }
+.ov-card .jt { font: 600 17px/1.3 var(--f-journal); }
+.linkbtn { justify-self: start; border: 0; background: none; padding: 4px 0 0; color: var(--route); font-weight: 800; font-size: 13.5px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; transition: gap .2s var(--ease); }
+.linkbtn::after { content: "→"; }
+.linkbtn:hover { gap: 10px; }
+.where { display: flex; gap: 12px; align-items: center; font-size: 14px; }
+.where .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 4px color-mix(in srgb, var(--warn) 40%, transparent); flex: none; }
+@media (max-width: 820px) { .ov { grid-template-columns: minmax(0, 1fr); } }
 
 /* Summary tiles */
-.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.tile { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; min-width: 0; }
-.tile b { display: block; font: 600 21px/1.15 var(--f-mono); font-variant-numeric: tabular-nums; }
-.tile span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.tile small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
-.fineprint { font-size: 12.5px; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.tile { padding: 16px 18px; min-width: 0; display: grid; gap: 4px; }
+.tile b { display: block; font: 600 23px/1.15 var(--f-mono); font-variant-numeric: tabular-nums; }
+.tile span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; font-weight: 700; }
+.tile small { display: block; color: var(--muted); font-size: 12.5px; }
+.fineprint { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.55; }
 
 /* Itinerary */
-.week { font: 800 12px/1 var(--f-display); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 12px 0 2px; display: flex; gap: 8px; align-items: center; }
+.itin { display: grid; gap: 12px; }
+.week { font: 800 12px/1 var(--f-display); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); padding: 14px 0 2px; display: flex; gap: 10px; align-items: center; }
 .week::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.leg { margin: 2px 0 2px 22px; display: grid; gap: 5px; }
-.legsign { display: flex; align-items: center; gap: 8px; background: var(--sign); color: var(--sign-ink); border-radius: 6px; padding: 5px 10px 4px; border: 1px solid color-mix(in srgb, var(--sign-ink) 12%, transparent); font: 700 13px/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .04em; width: fit-content; max-width: 100%; }
+.leg { margin: 0 0 0 26px; display: grid; gap: 8px; }
+.legsign { display: flex; align-items: center; gap: 10px; background: var(--sign); color: var(--sign-ink); border-radius: 8px; padding: 7px 12px 6px; border: 1px solid color-mix(in srgb, var(--sign-ink) 12%, transparent); font: 700 13px/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; width: fit-content; max-width: 100%; }
 .legsign.ferry { background: var(--ferry); color: var(--sign-ink); }
 .legsign .km { font: 600 13px var(--f-mono); }
 .legsign svg { width: 14px; height: 14px; flex: none; }
-.legmeta { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
-.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--panel); white-space: nowrap; }
+.legmeta { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--panel); white-space: nowrap; }
 .chip.warn { background: var(--warn); color: var(--warn-ink); border-color: transparent; }
 .chip.ok { background: var(--sign); color: var(--sign-ink); border-color: transparent; }
 .chip.peach { background: var(--peach); color: var(--warn-ink); border-color: transparent; }
 .chip.detour { border-color: var(--brown); color: var(--brown); }
-.stop { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; cursor: pointer; text-align: left; width: 100%; }
+.stop { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 14px; align-items: start; padding: 16px 18px; cursor: pointer; text-align: left; width: 100%; }
 .stop:hover { border-color: var(--route); }
-.stop .pin { width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid var(--route); background: var(--panel); margin-top: 4px; }
+.stop .pin { width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--route); background: var(--panel); margin-top: 4px; }
 .stop.visited .pin { background: var(--route); }
 .stop.skipped { opacity: .55; }
 .stop.skipped .pin { border-color: var(--muted); border-style: dashed; }
 .stop.detour .pin { border-color: var(--brown); }
-.stop .name { font: 700 16px/1.25 var(--f-display); }
-.stop .meta { font-size: 13px; color: var(--muted); }
-.stop .plan { font-size: 13.5px; margin-top: 3px; }
-.stop .row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
-.gap { border: 1.5px dashed var(--line); border-radius: var(--r); padding: 12px; color: var(--muted); font-size: 14px; }
-.mini { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 3px 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.stop .name { font: 700 17px/1.25 var(--f-display); }
+.stop .meta { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+.stop .plan { font-size: 14px; margin-top: 6px; }
+.stop .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+.stop .row:empty { display: none; }
+.gap { border: 1.5px dashed var(--line); border-radius: var(--r); padding: 16px 18px; color: var(--muted); font-size: 14px; }
+.mini { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 800; cursor: pointer; position: relative; overflow: hidden; transition: border-color .2s var(--ease), color .2s var(--ease), transform .15s var(--ease); }
 .mini:hover { border-color: var(--route); color: var(--route); }
 
 /* Journal */
-.entry { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.journal-list { display: grid; gap: 22px; }
+.entry { overflow: hidden; }
 .entry img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: var(--line); }
-.entry .body { padding: 12px 14px 14px; display: grid; gap: 4px; }
-.entry h3 { margin: 0; font: 600 19px/1.25 var(--f-journal); text-wrap: balance; }
-.entry .when { font: 700 11.5px/1 var(--f-display); text-transform: uppercase; letter-spacing: .08em; color: var(--brown); }
-.entry p { margin: 4px 0 0; font: 400 15.5px/1.6 var(--f-journal); white-space: pre-line; }
-.entry .tag { font-size: 12px; color: var(--muted); }
-.empty { text-align: center; color: var(--muted); padding: 24px 12px; border: 1.5px dashed var(--line); border-radius: var(--r); font-size: 14px; }
+.entry .body { padding: 18px 20px 20px; display: grid; gap: 8px; }
+.entry h3 { margin: 0; font: 600 21px/1.25 var(--f-journal); text-wrap: balance; }
+.entry .when { font: 800 11.5px/1 var(--f-display); text-transform: uppercase; letter-spacing: .1em; color: var(--brown); }
+.entry p { margin: 0; font: 400 16px/1.65 var(--f-journal); white-space: pre-line; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.empty { text-align: center; color: var(--muted); padding: 32px 16px; border: 1.5px dashed var(--line); border-radius: var(--r); font-size: 14px; }
 
 /* Money */
-.bars { display: grid; gap: 10px; }
-.bar { display: grid; gap: 4px; }
-.bar .top { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
-.bar .track { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
-.bar .fill { height: 100%; background: var(--route); border-radius: 4px; }
+.bars { display: grid; gap: 16px; }
+.bar { display: grid; gap: 7px; }
+.bar .top { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.bar .track { height: 9px; background: var(--line); border-radius: 5px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--route); border-radius: 5px; transform-origin: left; }
 .bar .fill.over { background: var(--danger); }
-.tablewrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
-table { border-collapse: collapse; width: 100%; font-size: 13px; }
-th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
-th { font: 700 11px/1 var(--f-display); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 800 11px/1 var(--f-display); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 td.r, th.r { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 tr:last-child td { border-bottom: 0; }
 
+/* Log: action picker */
+.actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.action { --ac: var(--sign); display: grid; gap: 10px; justify-items: start; text-align: left; padding: 16px 16px 18px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); cursor: pointer; position: relative; overflow: hidden; transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease); }
+.action:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.action .ic { width: 38px; height: 38px; border-radius: 11px; background: var(--ac); color: var(--sign-ink); display: grid; place-items: center; transition: transform .25s var(--ease); }
+.action .ic svg { width: 20px; height: 20px; }
+.action b { font: 800 15px/1.1 var(--f-display); }
+.action small { color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: -4px; }
+.action[aria-pressed="true"] { border-color: var(--ac); background: color-mix(in srgb, var(--ac) 22%, var(--card)); box-shadow: var(--shadow); }
+.action[aria-pressed="true"] .ic { transform: scale(1.08); }
+
 /* Forms */
-.seg { display: flex; flex-wrap: wrap; gap: 6px; }
-.seg button { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-form.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 12px; }
-.field { display: grid; gap: 4px; min-width: 0; }
-.field label, .lbl { font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-.field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 10px; font-size: 16px; min-width: 0; }
-.field textarea { min-height: 110px; resize: vertical; font-family: var(--f-journal); }
-.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-.check input { width: 18px; height: 18px; accent-color: var(--route); }
-.btn { border: 1px solid color-mix(in srgb, var(--sign-ink) 18%, transparent); border-radius: 8px; padding: 11px 14px; font: 800 14px/1 var(--f-display); text-transform: uppercase; letter-spacing: .06em; cursor: pointer; background: var(--sign); color: var(--sign-ink); }
-.btn.ghost { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
-.btn.big { padding: 15px; font-size: 16px; }
-.btnrow { display: flex; flex-wrap: wrap; gap: 8px; }
-.loc { font-size: 13px; color: var(--muted); }
-.loc b { color: var(--ink); }
-.preview-img { max-height: 180px; border-radius: 8px; object-fit: cover; }
-.queue { display: flex; justify-content: space-between; gap: 10px; align-items: center; background: var(--warn); color: var(--warn-ink); padding: 8px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 600; }
-.queue button { background: var(--warn-ink); color: var(--warn); border: 0; border-radius: 6px; padding: 5px 10px; font-weight: 800; cursor: pointer; }
+form.card { padding: 24px; display: grid; gap: 22px; box-shadow: var(--shadow); }
+form.card > h3 { margin: 0; font: 800 18px/1.2 var(--f-display); display: flex; align-items: center; gap: 10px; }
+.field { display: grid; gap: 8px; min-width: 0; }
+.field > label, .field > .lbl { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.field input, .field select, .field textarea { width: 100%; border: 1.5px solid var(--line); background: var(--panel); border-radius: 12px; padding: 13px 14px; font-size: 16px; min-width: 0; transition: border-color .2s var(--ease), box-shadow .2s var(--ease); }
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--route); box-shadow: 0 0 0 4px color-mix(in srgb, var(--route) 18%, transparent); }
+.field textarea { min-height: 140px; resize: vertical; font-family: var(--f-journal); line-height: 1.6; }
+.field .big-input { font: 600 26px/1.2 var(--f-mono); padding: 14px 16px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 520px) { .three { grid-template-columns: repeat(2, minmax(0, 1fr)); } .three > :last-child { grid-column: 1 / -1; } }
+.hint { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.5; }
+.divider { display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chipbtn { position: relative; }
+.chipbtn input { position: absolute; opacity: 0; pointer-events: none; }
+.chipbtn span { display: inline-block; padding: 9px 15px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--panel); font-weight: 700; font-size: 14px; cursor: pointer; position: relative; overflow: hidden; transition: background .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease), transform .15s var(--ease); }
+.chipbtn span:hover { border-color: var(--route); }
+.chipbtn input:checked + span { background: var(--route); border-color: var(--route); color: #fffdf9; }
+.chipbtn input:focus-visible + span { outline: 2.5px solid var(--route); outline-offset: 2px; }
+.switch { display: flex; align-items: center; gap: 14px; cursor: pointer; font-size: 15px; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { width: 46px; height: 28px; border-radius: 999px; background: var(--line); position: relative; flex: none; transition: background .25s var(--ease); }
+.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fffdf9; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .25s var(--ease); }
+.switch input:checked + .track { background: var(--route); }
+.switch input:checked + .track::after { transform: translateX(18px); }
+.switch input:focus-visible + .track { outline: 2.5px solid var(--route); outline-offset: 2px; }
+.switches { display: grid; gap: 14px; }
+.btn { border: 1px solid color-mix(in srgb, var(--sign-ink) 14%, transparent); border-radius: 12px; padding: 14px 18px; font: 800 14px/1 var(--f-display); text-transform: uppercase; letter-spacing: .07em; cursor: pointer; background: var(--sign); color: var(--sign-ink); position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: transform .15s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease), filter .2s var(--ease); }
+.btn:hover { box-shadow: var(--shadow-lift); filter: brightness(1.03); }
+.btn.primary { background: var(--route); color: #fffdf9; border-color: transparent; }
+.btn.ghost { background: var(--panel); color: var(--ink); border: 1.5px solid var(--line); }
+.btn svg { width: 20px; height: 20px; flex: none; }
+.btn.big { padding: 18px; font-size: 15px; width: 100%; border-radius: 14px; }
+.btn.done { background: var(--ok); color: #fffdf9; }
+.btn[disabled] { opacity: .6; cursor: progress; }
+.arrive { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; text-align: left; width: 100%; padding: 18px 20px; border-radius: 16px; border: 1.5px solid color-mix(in srgb, var(--warn) 70%, var(--line)); background: color-mix(in srgb, var(--warn) 22%, var(--panel)); cursor: pointer; position: relative; overflow: hidden; transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
+.arrive:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.arrive .pinic { width: 44px; height: 44px; border-radius: 50%; background: var(--warn); color: var(--warn-ink); display: grid; place-items: center; }
+.arrive .pinic svg { width: 22px; height: 22px; }
+.arrive b { display: block; font: 800 17px/1.25 var(--f-display); }
+.arrive small { color: var(--muted); font-size: 13px; }
+.arrive .go { font-size: 22px; color: var(--warn-ink); transition: transform .2s var(--ease); }
+.arrive:hover .go { transform: translateX(4px); }
+.locwrap { display: grid; gap: 14px; }
+.locopts { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: end; }
+.locor { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; padding-bottom: 16px; }
+@media (max-width: 760px) { .locopts { grid-template-columns: minmax(0, 1fr); } .locor { padding: 0; text-align: center; } }
+.locbox { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--panel); }
+.locbox .loctext { display: flex; align-items: center; gap: 12px; min-width: 0; font-size: 14px; }
+.locbox .locdot { width: 12px; height: 12px; border-radius: 50%; background: var(--line); flex: none; }
+.locbox.ok .locdot { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent); }
+.locbox.finding .locdot { background: var(--warn); animation: pulse 1s ease-in-out infinite; }
+.locbox.error .locdot { background: var(--danger); }
+.locbox .locbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+@keyframes pulse { 50% { transform: scale(1.5); opacity: .5; } }
+.photozone { display: grid; place-items: center; gap: 8px; text-align: center; padding: 28px 16px; border: 2px dashed var(--line); border-radius: 14px; background: var(--panel); cursor: pointer; color: var(--muted); transition: border-color .2s var(--ease), background .2s var(--ease); position: relative; }
+.photozone:hover { border-color: var(--route); background: color-mix(in srgb, var(--route) 6%, var(--panel)); }
+.photozone svg { width: 30px; height: 30px; color: var(--route); }
+.photozone b { color: var(--ink); font-size: 15px; }
+.photozone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.photoprev { position: relative; border-radius: 14px; overflow: hidden; }
+.photoprev img { display: block; width: 100%; max-height: 320px; object-fit: cover; }
+.photoprev button { position: absolute; top: 10px; right: 10px; }
+.totalbox { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px 18px; border-radius: 12px; background: color-mix(in srgb, var(--route) 10%, var(--panel)); border: 1px solid var(--line); }
+.totalbox b { font: 600 26px/1 var(--f-mono); font-variant-numeric: tabular-nums; }
+details.more summary { cursor: pointer; font-weight: 800; font-size: 13.5px; color: var(--route); list-style: none; display: inline-flex; gap: 8px; align-items: center; }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary::before { content: "+"; font-size: 16px; transition: transform .2s var(--ease); }
+details.more[open] summary::before { transform: rotate(45deg); }
+details.more[open] > div { margin-top: 18px; display: grid; gap: 18px; }
+.queue { display: flex; justify-content: space-between; gap: 14px; align-items: center; background: var(--warn); color: var(--warn-ink); padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 700; }
+.queue button { background: var(--warn-ink); color: var(--warn); border: 0; border-radius: 8px; padding: 8px 14px; font-weight: 800; cursor: pointer; }
+.recent { padding: 6px 0; }
+.recent-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.recent-row:last-child { border-bottom: 0; }
+.recent-row .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--ac); color: var(--sign-ink); }
+.recent-row .ic svg { width: 16px; height: 16px; }
+.recent-row b { display: block; font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-row small { color: var(--muted); font-size: 12.5px; }
+.recent-row time { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.pinbox { padding: 28px; display: grid; gap: 18px; max-width: 460px; margin: 0 auto; width: 100%; box-shadow: var(--shadow); }
+.foot { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.foot button { border: 0; background: none; color: var(--muted); font-weight: 700; font-size: 13px; cursor: pointer; padding: 10px 6px 4px; text-decoration: underline; text-underline-offset: 3px; }
+.foot button:hover { color: var(--ink); }
 
 /* Map overlays */
-.legend { position: absolute; z-index: 500; left: max(10px, env(safe-area-inset-left, 0px)); bottom: 22px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: grid; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-.legend div { display: flex; align-items: center; gap: 7px; }
+.legend { position: absolute; z-index: 500; left: max(12px, env(safe-area-inset-left, 0px)); bottom: 24px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 12px; display: grid; gap: 6px; box-shadow: var(--shadow); }
+.legend div { display: flex; align-items: center; gap: 8px; }
 .legend i { display: inline-block; flex: none; }
 .lg-plan { width: 22px; border-top: 3px dashed var(--route); }
 .lg-drive { width: 22px; height: 5px; background: var(--drive); border: 1px solid var(--casing); border-radius: 3px; }
 .lg-dot { width: 11px; height: 11px; border-radius: 50%; border: 2.5px solid var(--route); background: var(--route); }
 .lg-jr { width: 13px; height: 13px; border-radius: 3px; background: var(--brown); }
-.pickhint { position: absolute; z-index: 600; top: 12px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 13.5px; box-shadow: 0 3px 10px rgba(0,0,0,.25); white-space: nowrap; }
-.mapbtn { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-weight: 700; font-size: 12.5px; cursor: pointer; }
+.pickhint { position: absolute; z-index: 600; top: calc(64px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; box-shadow: 0 3px 10px rgba(0,0,0,.25); white-space: nowrap; }
 .leaflet-container { font: 13px/1.4 var(--f-body); background: var(--sea); }
 .leaflet-tooltip, .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panel); color: var(--ink); border-color: var(--line); }
-.leaflet-tooltip { border-radius: 8px; box-shadow: 0 3px 12px rgba(0,0,0,.18); padding: 7px 9px; }
-.leaflet-popup-content { margin: 12px 14px; min-width: 200px; max-width: 280px; }
-.leaflet-popup-content h4 { margin: 0 0 2px; font: 700 15px/1.25 var(--f-display); }
+.leaflet-tooltip { border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,.18); padding: 8px 10px; }
+.leaflet-popup-content-wrapper { border-radius: 14px; }
+.leaflet-popup-content { margin: 14px 16px; min-width: 200px; max-width: 280px; }
+.leaflet-popup-content h4 { margin: 0 0 4px; font: 700 15px/1.25 var(--f-display); }
 .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+.leaflet-bar { border-radius: 10px !important; overflow: hidden; }
 .leaflet-bar a, .leaflet-control-attribution { background: var(--panel) !important; color: var(--ink) !important; }
 .leaflet-control-attribution a { color: var(--route) !important; }
 .jtip { width: 190px; white-space: normal; padding: 0 !important; overflow: hidden; }
 .jtip img { display: block; width: 100%; height: 110px; object-fit: cover; }
-.jtip div { padding: 6px 9px 8px; }
+.jtip div { padding: 7px 10px 9px; }
 .jtip b { font: 600 14px/1.25 var(--f-journal); display: block; }
-.jpop img { width: 100%; border-radius: 6px; margin: 4px 0 6px; }
-.jpop p { margin: 4px 0 0; font: 14px/1.5 var(--f-journal); white-space: pre-line; max-height: 200px; overflow: auto; }
-.jicon { width: 22px; height: 22px; border-radius: 5px; background: var(--brown); border: 2px solid var(--panel); display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.jpop img { width: 100%; border-radius: 8px; margin: 6px 0 8px; }
+.jpop p { margin: 4px 0 0; font: 14px/1.55 var(--f-journal); white-space: pre-line; max-height: 200px; overflow: auto; }
+.jicon { width: 22px; height: 22px; border-radius: 5px; background: var(--brown); border: 2px solid var(--panel); display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); transition: transform .2s var(--ease); }
+.jicon:hover { transform: scale(1.2); }
 .jicon svg { width: 12px; height: 12px; }
 .here { width: 18px; height: 18px; border-radius: 50%; background: var(--warn); border: 3px solid var(--casing); position: relative; }
 .here::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid var(--warn); animation: ping 2s ease-out infinite; }
 @keyframes ping { from { transform: scale(.5); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .here::after { animation: none; opacity: .5; } }
-.toast { position: fixed; z-index: 2000; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); box-shadow: 0 4px 16px rgba(0,0,0,.25); }
-.pinbox { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 10px; }
+.toast { position: fixed; z-index: 4000; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 13px 20px; border-radius: 14px; font-weight: 700; font-size: 14px; max-width: calc(100% - 32px); box-shadow: 0 10px 30px rgba(0,0,0,.28); display: flex; gap: 10px; align-items: center; }
+.skel { border-radius: var(--r); background: linear-gradient(90deg, var(--card) 25%, color-mix(in srgb, var(--line) 70%, var(--card)) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.3s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* Motion (only when the viewer hasn't asked for less) */
+.ripple { position: absolute; border-radius: 50%; background: currentColor; opacity: .18; transform: scale(0); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .ripple { animation: ripple .55s var(--ease) forwards; }
+  @keyframes ripple { to { transform: scale(1); opacity: 0; } }
+  .btn:active, .mini:active, .action:active, .chipbtn span:active, .tabs button:active, .mapbtn:active, .arrive:active, .rp:active { transform: scale(.97); }
+  .stack.enter > * { animation: rise .5s var(--ease) both; animation-delay: calc(var(--i, 0) * 60ms); }
+  .itin.enter > * { animation: rise .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 30ms); }
+  .formin { animation: rise .35s var(--ease) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .toast:not([hidden]) { animation: toastin .35s var(--ease) both; }
+  @keyframes toastin { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .mapwrap.expanded { animation: grow .3s var(--ease) both; }
+  @keyframes grow { from { opacity: .4; transform: scale(.97); } to { opacity: 1; transform: none; } }
+  .bar .fill { animation: fill .8s var(--ease) both; }
+  @keyframes fill { from { transform: scaleX(0); } }
+  .title-bubble { animation: rise .6s var(--ease) both; }
+  .route-box { animation: rise .6s .08s var(--ease) both; }
+  .stats { animation: rise .6s .16s var(--ease) both; }
+  .btn.done svg { animation: pop .4s var(--ease) both; }
+  @keyframes pop { from { transform: scale(0); } 60% { transform: scale(1.3); } to { transform: scale(1); } }
+}
+@media (prefers-reduced-motion: reduce) { .here::after, .skel, .locbox.finding .locdot { animation: none; } }
 </style>
 </head>
 <body>
 
 <div class="page">
   <div class="shell">
-    <header class="plate">
-      <div class="plate-in">
-        <h1 id="tripName">Lloyd's Half Lap 27</h1>
-        <div class="route" id="routeLine"></div>
-        <div class="stats" id="stats"></div>
+    <header class="hero">
+      <div class="title-bubble">
+        <div class="title-in">
+          <h1 id="tripName">Lloyd’s Half Lap 27’</h1>
+          <p class="tagline" id="tagline"></p>
+        </div>
       </div>
+      <nav class="route-box" id="routeLine" aria-label="Key stops"></nav>
+      <div class="stats" id="stats"></div>
     </header>
     <div id="demoBanner" class="banner" hidden></div>
     <nav class="tabs" role="tablist" id="tabs">
-      <button role="tab" data-tab="overview" id="tab-overview">Overview</button>
-      <button role="tab" data-tab="map" id="tab-map">Map</button>
-      <button role="tab" data-tab="trip" id="tab-trip">Trip</button>
-      <button role="tab" data-tab="journal" id="tab-journal">Journal</button>
-      <button role="tab" data-tab="money" id="tab-money">Money</button>
-      <button role="tab" data-tab="log" id="tab-log">Log</button>
+      <button role="tab" data-tab="overview" id="tab-overview" style="--tc: var(--c-overview)">Overview</button>
+      <button role="tab" data-tab="map" id="tab-map" style="--tc: var(--c-map)">Map</button>
+      <button role="tab" data-tab="trip" id="tab-trip" style="--tc: var(--c-trip)">Trip</button>
+      <button role="tab" data-tab="journal" id="tab-journal" style="--tc: var(--c-journal)">Journal</button>
+      <button role="tab" data-tab="money" id="tab-money" style="--tc: var(--c-money)" hidden>Money</button>
+      <button role="tab" data-tab="log" id="tab-log" style="--tc: var(--c-log)" hidden>Log</button>
     </nav>
-    <main id="panel"></main>
+    <main id="panel"><div class="stack"><div class="skel" style="height:320px"></div><div class="skel" style="height:120px"></div></div></main>
+    <footer class="foot" id="foot"></footer>
   </div>
 </div>
 <div id="mapHolder" hidden>
@@ -1020,7 +1166,9 @@ const state = {
   data: null,
   pin: LS.get('hl27_pin', ''),
   unlocked: false,
-  tab: LS.get('hl27_tab', 'overview'),
+  tab: location.hash === '#crew' ? 'crew' : 'overview',
+  loc: { status: 'idle' },
+  locDefault: '',
   base: LS.get('hl27_base', 'map'),
   logSeg: 'checkin',
   pick: null,           // {lat,lng,label}
@@ -1029,7 +1177,6 @@ const state = {
   queue: LS.get('hl27_queue', []),
   fitted: false
 };
-if (!['overview','map','trip','journal','money','log'].includes(state.tab)) state.tab = 'overview';
 function now() { return DEMO ? new Date('2027-04-14T18:30:00') : new Date(); }
 
 /* =========================================================
@@ -1084,6 +1231,7 @@ function drivenKm() {
   for (let i = 1; i < c.length; i++) km += (c[i].km != null && c[i].km !== '') ? +c[i].km : haversine(c[i - 1], c[i]) * 1.15;
   return km;
 }
+function sortData(d) { if (d && d.checkins) d.checkins.sort((a, b) => new Date(a.time) - new Date(b.time)); return d; }
 function lastCheckin() { const c = state.data.checkins; return c.length ? c[c.length - 1] : null; }
 
 /* =========================================================
@@ -1107,8 +1255,11 @@ function initMap() {
     if (!state.picking) return;
     state.pick = { lat: +e.latlng.lat.toFixed(5), lng: +e.latlng.lng.toFixed(5), label: 'Spot picked on the map' };
     state.picking = false; $('#pickHint').hidden = true; map.getContainer().style.cursor = '';
-    renderMap(); renderPanel();
-    toast('Spot set. Finish the form below.');
+    const slot = $('#mapSlot');
+    if (slot && slot.dataset.mode === 'log') toggleExpand(false);
+    state.loc = { status: 'ok' };
+    renderMap(); updateLoc();
+    toast('Spot set.', true);
   });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => renderMap());
   new MutationObserver(() => renderMap()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -1146,18 +1297,24 @@ function placeMap() {
   if (!slot) { if (mw.classList.contains('expanded')) toggleExpand(false); $('#mapHolder').appendChild(mw); return; }
   slot.appendChild(mw);
   mw.classList.toggle('compact', slot.dataset.mode === 'overview');
-  $('#enlargeBtn').textContent = slot.dataset.mode === 'overview' ? 'Enlarge map' : (mw.classList.contains('expanded') ? 'Close full screen' : 'Full screen');
+  enlargeLabel();
   if (!map) { initMap(); renderMap(); }
   map.invalidateSize();
-  if (!state.fitted) { fitAll(false); state.fitted = true; }
+  maybeFit();
+}
+function maybeFit() { if (map && !state.fitted && map.getSize().x > 0) { fitAll(false); state.fitted = true; } }
+function enlargeLabel() {
+  const mw = $('#mapwrap'), slot = $('#mapSlot'), mode = slot ? slot.dataset.mode : '';
+  const ex = mw.classList.contains('expanded');
+  $('#enlargeBtn').textContent = mode === 'overview' ? 'Enlarge map' : mode === 'log' ? 'Cancel' : (ex ? 'Close full screen' : 'Full screen');
 }
 function toggleExpand(on) {
   const mw = $('#mapwrap');
   const want = on === undefined ? !mw.classList.contains('expanded') : on;
   mw.classList.toggle('expanded', want);
   document.body.style.overflow = want ? 'hidden' : '';
-  $('#enlargeBtn').textContent = want ? 'Close full screen' : 'Full screen';
-  setTimeout(() => map && map.invalidateSize(), 50);
+  enlargeLabel();
+  setTimeout(() => { if (map) { map.invalidateSize(); maybeFit(); } }, 60);
 }
 function fitAll(animate) {
   if (!map) return;
@@ -1181,7 +1338,10 @@ function renderMap() {
   if (c.length > 1) {
     const pts = [];
     for (let i = 1; i < c.length; i++) {
-      const seg = c[i].poly ? decodePoly(c[i].poly) : [[c[i - 1].lat, c[i - 1].lng], [c[i].lat, c[i].lng]];
+      let seg = c[i].poly ? decodePoly(c[i].poly) : null;
+      // Road shape only if it was worked out from this check-in's neighbour (backdated entries can change the order)
+      if (seg && !(seg.length && haversine({ lat: seg[0][0], lng: seg[0][1] }, c[i - 1]) < 3)) seg = null;
+      if (!seg) seg = [[c[i - 1].lat, c[i - 1].lng], [c[i].lat, c[i].lng]];
       pts.push(...seg);
     }
     L.polyline(pts, { color: casing, weight: 8, opacity: .45, interactive: false }).addTo(layers);
@@ -1235,7 +1395,7 @@ function renderMap() {
 }
 function focusOnMap(item) {
   if (!item || item.lat == null) return;
-  if (state.tab !== 'map') { state.tab = 'map'; LS.set('hl27_tab', 'map'); renderHeader(); renderPanel(); }
+  if (state.tab !== 'map') goTab('map');
   $('#mapwrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
   map.flyTo([item.lat, item.lng], Math.max(map.getZoom(), 9), { duration: .8 });
   if (item._marker) setTimeout(() => item._marker.openPopup(), 850);
@@ -1249,41 +1409,91 @@ function render() {
   renderPanel();
   renderMap();
 }
+const TRIP_TITLE = 'Lloyd’s Half Lap 27’';
+const HEADLINE_DEFAULT = 'Wollongong, Mildura, Adelaide, Port Lincoln, Nullarbor, Esperance, Albany, Perth, Rottnest, Kalbarri, Shark Bay, Coral Bay, Exmouth, Karijini';
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+/** Key stops for the route box: the routeHeadline row in Settings, or the default list. */
+function headlineStops() {
+  const s = state.data.settings || {};
+  return String(s.routeHeadline || HEADLINE_DEFAULT).split(',').map(x => x.trim()).filter(Boolean).map(n => {
+    const want = n.toLowerCase();
+    const matches = state.data.stops.filter(x => x.name.toLowerCase().includes(want));
+    return { name: n, stop: matches.find(x => x.status !== 'visited') || matches[0], matches };
+  });
+}
 function renderHeader() {
   const s = settings(), t = now(), start = parseDay(s.start), end = parseDay(s.end);
-  $('#tripName').textContent = s.name;
-  document.title = s.name;
-  // Main waypoints for the subtitle
-  const big = state.data.stops.filter((x, i) => i === 0 || (x.nights >= 2 && x.travel !== 'ferry' && x.status !== 'skipped'));
-  const names = []; big.forEach(x => { const n = x.name.replace(/\s*\(.*\)/, '').split(' & ')[0]; if (!names.includes(n)) names.push(n); });
-  $('#routeLine').textContent = names.join(' → ');
+  $('#tripName').textContent = TRIP_TITLE;
+  document.title = TRIP_TITLE;
+  $('#tagline').textContent = start && end ? start.getDate() + ' ' + MONTHS[start.getMonth()] + ' – ' + end.getDate() + ' ' + MONTHS[end.getMonth()] + ' ' + end.getFullYear() : '';
+  // Route box: key stops as chips; visited ones fill in, the one we're at glows gold
+  const last = lastCheckin();
+  $('#routeLine').innerHTML = headlineStops().map((h, i) => {
+    const done = h.matches.length && h.matches.every(m => m.status === 'visited');
+    const here = last && h.matches.some(m => m.lat != null && haversine(m, last) < 25);
+    return (i ? '<span class="sep" aria-hidden="true">→</span>' : '') +
+      '<button type="button" class="rp' + (here ? ' now' : done ? ' done' : '') + '"' + (h.stop ? ' data-act="focus" data-id="' + esc(h.stop.id) + '"' : '') + '>' + esc(h.name) + '</button>';
+  }).join('');
   const visited = state.data.stops.filter(x => x.status === 'visited').length;
   let dayLabel, dayVal;
   if (start && t < start) { dayVal = Math.ceil((start - t) / 86400000); dayLabel = 'days to go'; }
   else if (start && end && t > addDays(end, 1)) { dayVal = Math.round((end - start) / 86400000) + 1; dayLabel = 'days on the road'; }
   else if (start) { dayVal = Math.floor((t - start) / 86400000) + 1; dayLabel = 'trip day'; }
-  else { dayVal = '—'; dayLabel = 'days'; }
+  else { dayVal = 0; dayLabel = 'days'; }
   $('#stats').innerHTML =
-    '<div class="stat"><b>' + dayVal + '</b><span>' + dayLabel + '</span></div>' +
-    '<div class="stat"><b>' + n0(drivenKm()) + '</b><span>km driven</span></div>' +
-    '<div class="stat"><b>' + visited + '/' + state.data.stops.length + '</b><span>stops done</span></div>';
+    '<div class="stat"><b data-n="' + dayVal + '">' + n0(dayVal) + '</b><span>' + dayLabel + '</span></div>' +
+    '<div class="stat"><b data-n="' + Math.round(drivenKm()) + '">' + n0(drivenKm()) + '</b><span>km driven</span></div>' +
+    '<div class="stat"><b data-n="' + visited + '" data-suf="/' + state.data.stops.length + '">' + visited + '/' + state.data.stops.length + '</b><span>stops done</span></div>';
+  if (!state.countedUp) { state.countedUp = true; countUp(); }
   const b = $('#demoBanner');
-  if (DEMO) { b.hidden = false; b.innerHTML = '<b>Preview with sample entries.</b> Your real itinerary is loaded; the check-ins, journal posts and spending from 10–14 April are made up to show how it looks. Any PIN unlocks Money and Log here.'; }
+  if (DEMO) { b.hidden = false; b.innerHTML = '<b>Preview with sample entries.</b> Your real itinerary is loaded; the check-ins, journal posts and spending from 10–14 April are made up to show how it looks. Use “Crew sign-in” at the bottom (any PIN works here) to see Money and Log.'; }
   else b.hidden = true;
   document.querySelectorAll('#tabs button').forEach(btn => {
-    const tab = btn.dataset.tab, locked = (tab === 'money' || tab === 'log') && !state.unlocked;
+    const tab = btn.dataset.tab;
+    btn.hidden = (tab === 'money' || tab === 'log') && !state.unlocked;
     btn.setAttribute('aria-selected', String(state.tab === tab));
-    btn.innerHTML = { overview: 'Overview', map: 'Map', trip: 'Trip', journal: 'Journal', money: 'Money', log: 'Log' }[tab] + (locked ? ICON_LOCK : '');
+  });
+  const names = s.travellers.filter(n => !/partner/i.test(n));
+  $('#foot').innerHTML = state.unlocked
+    ? '<span>Signed in on this phone</span><button type="button" data-act="lock">Sign out</button>'
+    : '<button type="button" data-act="crew">' + (names.length >= 2 ? esc(names.join(' & ')) + ' sign-in' : 'Crew sign-in') + '</button>';
+}
+function countUp() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('#stats b[data-n]').forEach(el => {
+    const to = +el.dataset.n, suf = el.dataset.suf || '', t0 = performance.now();
+    if (!to) return;
+    const step = t => {
+      const k = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = n0(to * e) + suf;
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   });
 }
 function renderPanel() {
-  const p = $('#panel');
-  const tab = state.tab;
+  const p = $('#panel'), tab = state.tab;
   $('#mapHolder').appendChild($('#mapwrap'));
-  if ((tab === 'money' || tab === 'log') && !state.unlocked) p.innerHTML = pinHTML();
-  else p.innerHTML = tab === 'overview' ? overviewHTML() : tab === 'map' ? mapTabHTML() : tab === 'trip' ? tripHTML() : tab === 'journal' ? journalHTML() : tab === 'money' ? moneyHTML() : logHTML();
-  if (tab === 'log' && state.unlocked) bindLog();
+  let html;
+  if (tab === 'crew' || ((tab === 'money' || tab === 'log') && !state.unlocked)) html = pinHTML();
+  else html = tab === 'overview' ? overviewHTML() : tab === 'map' ? mapTabHTML() : tab === 'trip' ? tripHTML() : tab === 'journal' ? journalHTML() : tab === 'money' ? moneyHTML() : logHTML();
+  p.innerHTML = '<div class="stack">' + html + '</div>';
+  if (tab !== state.renderedTab) {
+    const st = p.firstChild;
+    Array.from(st.children).forEach((c, i) => c.style.setProperty('--i', Math.min(i, 8)));
+    st.classList.add('enter');
+    const it = $('.itin', p);
+    if (it) { Array.from(it.children).slice(0, 16).forEach((c, i) => c.style.setProperty('--i', i)); it.classList.add('enter'); }
+  }
+  const logChanged = tab === 'log' && (state.renderedTab !== 'log' || state.segChanged);
+  state.renderedTab = tab; state.segChanged = false;
+  if (tab === 'log' && state.unlocked) bindLog(logChanged);
   placeMap();
+}
+function goTab(tab) {
+  state.tab = tab; renderHeader(); renderPanel();
+  const tabs = $('#tabs'), top = tabs.getBoundingClientRect().top;
+  if (top < 0) window.scrollTo({ top: window.scrollY + top - 8, behavior: 'smooth' });
 }
 function overviewHTML() {
   const t = now(), last = lastCheckin();
@@ -1291,13 +1501,13 @@ function overviewHTML() {
   const nextLeg = next ? legs().find(l => l.to === next) : null;
   const j = state.data.journal.slice().sort((a, b) => new Date(b.time) - new Date(a.time))[0];
   return '<div class="ov"><div class="slot slot-overview" id="mapSlot" data-mode="overview"></div><div class="ov-side">' +
-    '<div class="ov-card"><span class="lbl">Where we are</span>' + (last
+    '<div class="ov-card lift"><span class="lbl">Where we are</span>' + (last
       ? '<div class="where"><span class="dot"></span><div><div class="big">' + esc(last.place || 'On the road') + '</div><div class="small muted">' + esc(ago(last.time, t)) + (last.note ? ' — ' + esc(last.note) : '') + '</div></div></div>'
       : '<div class="small">No check-ins yet. The golden dot on the map will show where we are once we hit the road.</div>') + '</div>' +
-    (next ? '<div class="ov-card"><span class="lbl">Next stop</span><div class="big">' + esc(next.name) + '</div><div class="small muted">' +
+    (next ? '<div class="ov-card lift"><span class="lbl">Next stop</span><div class="big">' + esc(next.name) + '</div><div class="small muted">' +
       [fmtDay(next.arrive), next.nights ? next.nights + (next.nights === 1 ? ' night' : ' nights') : '', nextLeg && nextLeg.km ? (nextLeg.approx ? '≈' : '') + n0(nextLeg.km) + ' km away' : ''].filter(Boolean).map(esc).join(' · ') + '</div>' +
       (next.campsite ? '<div class="small">' + esc(next.campsite) + '</div>' : '') + '<button class="linkbtn" data-act="focus" data-id="' + esc(next.id) + '">Show on map</button></div>' : '') +
-    (j ? '<div class="ov-card"><span class="lbl">Latest from the journal</span>' + (j.photo ? '<img class="thumb" src="' + esc(j.photo) + '" alt="' + esc(j.title) + '">' : '') +
+    (j ? '<div class="ov-card lift"><span class="lbl">Latest from the journal</span>' + (j.photo ? '<img class="thumb" src="' + esc(j.photo) + '" alt="' + esc(j.title) + '">' : '') +
       '<div class="jt">' + esc(j.title) + '</div><div class="small muted">' + esc(fmtTime(j.time)) + (j.place ? ' · ' + esc(j.place) : '') + '</div><button class="linkbtn" data-goto="journal">Read the journal</button></div>' : '') +
     '</div></div>';
 }
@@ -1311,14 +1521,14 @@ function tripHTML() {
   const sum = (arr, k) => arr.reduce((a, x) => a + x[k], 0);
   const nights = state.data.stops.reduce((a, x) => a + (x.status !== 'skipped' ? (x.nights || 0) : 0), 0);
   let h = '<section class="section"><h2>Fuel plan</h2><div class="tiles">' +
-    '<div class="tile"><span>Planned driving</span><b>' + n0(sum(L_, 'km')) + ' km</b><small>' + n0(sum(remaining, 'km')) + ' km still to go</small></div>' +
-    '<div class="tile"><span>Diesel needed</span><b>' + n0(sum(L_, 'litres')) + ' L</b><small>' + n0(sum(remaining, 'litres')) + ' L still to buy</small></div>' +
-    '<div class="tile"><span>Fuel cost</span><b>' + money(sum(L_, 'cost')) + '</b><small>' + money(sum(remaining, 'cost')) + ' still to spend</small></div>' +
-    '<div class="tile"><span>Nights planned</span><b>' + nights + '</b><small>' + activeStops().length + ' stops</small></div>' +
+    '<div class="tile lift"><span>Planned driving</span><b>' + n0(sum(L_, 'km')) + ' km</b><small>' + n0(sum(remaining, 'km')) + ' km still to go</small></div>' +
+    '<div class="tile lift"><span>Diesel needed</span><b>' + n0(sum(L_, 'litres')) + ' L</b><small>' + n0(sum(remaining, 'litres')) + ' L still to buy</small></div>' +
+    '<div class="tile lift"><span>Fuel cost</span><b>' + money(sum(L_, 'cost')) + '</b><small>' + money(sum(remaining, 'cost')) + ' still to spend</small></div>' +
+    '<div class="tile lift"><span>Nights planned</span><b>' + nights + '</b><small>' + activeStops().length + ' stops</small></div>' +
     '</div><p class="fineprint">At <b>' + n1(eco.value) + ' L/100km</b> (' + (eco.source === 'logged' ? 'your real figure from the fuel log' : 'planning figure; switches to your real figure after two full-tank fills') + '), $' + s.price.toFixed(2) + '/L in town and $' + s.remotePrice.toFixed(2) + '/L remote. One ' + s.tank + ' L tank with ' + s.reserve + ' L kept in reserve' + (s.jerry ? ' plus ' + s.jerry + ' L of jerry cans' : '') + ' gets you about <b>' + n0(range) + ' km</b>. ' +
     (L_.some(l => l.approx) ? 'Distances marked ≈ are straight-line estimates until the Sheet works out the road distance.' : '') + '</p></section>';
 
-  h += '<section class="section"><h2>Itinerary</h2><div>';
+  h += '<section class="section"><h2>Itinerary</h2><div class="itin">';
   const start = parseDay(s.start);
   let lastWeek = null, prevActive = null;
   const legByTo = new Map(L_.map(l => [l.to, l]));
@@ -1338,9 +1548,9 @@ function tripHTML() {
         (fills && l.remote ? '<span class="chip warn">Longer than one tank: plan ' + fills + ' fuel stop' + (fills > 1 ? 's' : '') + ' or carry a jerry can</span>' : fills ? '<span class="chip">Refuel ' + fills + '× on the way</span>' : '') +
         '</div>') + '</div>';
     }
-    const cls = ['stop', st.status, st.type === 'detour' ? 'detour' : ''].join(' ');
+    const cls = ['stop', 'lift', st.status, st.type === 'detour' ? 'detour' : ''].join(' ');
     const nightsTxt = st.nights ? st.nights + (st.nights === 1 ? ' night' : ' nights') : (i === 0 ? 'Departure' : 'Pass through');
-    h += '<div style="padding:4px 0"><div class="' + cls + '" role="button" tabindex="0" data-act="focus" data-id="' + esc(st.id) + '"><span class="pin"></span><div style="min-width:0">' +
+    h += '<div><div class="' + cls + '" role="button" tabindex="0" data-act="focus" data-id="' + esc(st.id) + '"><span class="pin"></span><div style="min-width:0">' +
       '<div class="name">' + esc(st.name) + '</div>' +
       '<div class="meta">' + [fmtDay(st.arrive), nightsTxt, st.campsite].filter(Boolean).map(esc).join(' · ') + '</div>' +
       (st.plan ? '<div class="plan">' + esc(st.plan) + '</div>' : '') +
@@ -1360,7 +1570,7 @@ function tripHTML() {
   if (last && end) {
     const free = addDays(parseDay(last.arrive), last.nights || 0);
     const gap = Math.round((end - free) / 86400000);
-    if (gap > 0) h += '<div style="padding:6px 0"><div class="gap"><b>' + fmtDay(dayIso(free)) + ' – ' + fmtDay(s.end) + ': ' + gap + ' nights still to plan.</b> Add stops in the Sheet or from the Log tab and they\'ll appear on the map.</div></div>';
+    if (gap > 0) h += '<div><div class="gap"><b>' + fmtDay(dayIso(free)) + ' – ' + fmtDay(s.end) + ': ' + gap + ' nights still to plan.</b> Add stops in the Sheet or from the Log tab and they\'ll appear on the map.</div></div>';
   }
   h += '</div></section>';
   return h;
@@ -1369,12 +1579,12 @@ function tripHTML() {
 function journalHTML() {
   const j = state.data.journal.slice().sort((a, b) => new Date(b.time) - new Date(a.time));
   if (!j.length) return '<div class="empty">No journal entries yet. Posts with a photo and a pin on the map will show up here.</div>';
-  return '<section class="section"><h2>Journal</h2>' + j.map(e =>
-    '<article class="entry">' + (e.photo ? '<img loading="lazy" src="' + esc(e.photo) + '" alt="' + esc(e.title) + '">' : '') +
+  return '<section class="section"><h2>Journal</h2><div class="journal-list">' + j.map(e =>
+    '<article class="entry lift">' + (e.photo ? '<img loading="lazy" src="' + esc(e.photo) + '" alt="' + esc(e.title) + '">' : '') +
     '<div class="body"><div class="when">' + esc(fmtTime(e.time)) + (e.place ? ' · ' + esc(e.place) : '') + '</div>' +
     '<h3>' + esc(e.title) + '</h3><p>' + esc(e.text) + '</p>' +
-    '<div class="btnrow" style="margin-top:6px">' + (e.lat != null && e.lat !== '' ? '<button class="mini" data-act="focusj" data-id="' + esc(e.id) + '">Show on map</button>' : '') +
-    (state.unlocked && !e.public ? '<span class="chip">Only visible to you</span>' : '') + '</div></div></article>').join('') + '</section>';
+    '<div class="btnrow">' + (e.lat != null && e.lat !== '' ? '<button class="mini" data-act="focusj" data-id="' + esc(e.id) + '">Show on map</button>' : '') +
+    (state.unlocked && !e.public ? '<span class="chip">Only visible to you</span>' : '') + '</div></div></article>').join('') + '</div></section>';
 }
 
 function moneyHTML() {
@@ -1390,10 +1600,10 @@ function moneyHTML() {
   const planned = budget.reduce((a, b) => a + (+b.planned || 0), 0);
   const tripDays = start && parseDay(s.end) ? Math.round((parseDay(s.end) - start) / 86400000) + 1 : 0;
   let h = '<section class="section"><h2>Spending</h2><div class="tiles">' +
-    '<div class="tile"><span>Spent so far</span><b>' + money(total) + '</b><small>' + (planned ? 'of ' + money(planned) + ' budget' : 'Set a budget in the Sheet') + '</small></div>' +
-    '<div class="tile"><span>Per day</span><b>' + (days ? money(total / days) : '—') + '</b><small>' + (days ? 'over ' + days + ' days' : 'Starts on day 1') + (planned && tripDays ? ' · budget ' + money(planned / tripDays) + '/day' : '') + '</small></div>' +
-    '<div class="tile"><span>Fuel spent</span><b>' + money(fuelSpent) + '</b><small>Estimate for legs done: ' + money(fuelEst) + '</small></div>' +
-    '<div class="tile"><span>Real economy</span><b>' + (real ? n1(real.value) : '—') + '</b><small>' + (real ? 'L/100km over ' + n0(real.km) + ' km' : 'Needs two full-tank fills') + '</small></div>' +
+    '<div class="tile lift"><span>Spent so far</span><b>' + money(total) + '</b><small>' + (planned ? 'of ' + money(planned) + ' budget' : 'Set a budget in the Sheet') + '</small></div>' +
+    '<div class="tile lift"><span>Per day</span><b>' + (days ? money(total / days) : '—') + '</b><small>' + (days ? 'over ' + days + ' days' : 'Starts on day 1') + (planned && tripDays ? ' · budget ' + money(planned / tripDays) + '/day' : '') + '</small></div>' +
+    '<div class="tile lift"><span>Fuel spent</span><b>' + money(fuelSpent) + '</b><small>Estimate for legs done: ' + money(fuelEst) + '</small></div>' +
+    '<div class="tile lift"><span>Real economy</span><b>' + (real ? n1(real.value) : '—') + '</b><small>' + (real ? 'L/100km over ' + n0(real.km) + ' km' : 'Needs two full-tank fills') + '</small></div>' +
     '</div></section>';
   const cats = Array.from(new Set(budget.map(b => b.category).concat(Object.keys(byCat))));
   h += '<section class="section"><h2>Budget by category</h2><div class="bars">' + cats.map(c => {
@@ -1419,87 +1629,161 @@ function moneyHTML() {
 }
 
 function pinHTML() {
-  return '<form class="pinbox" id="pinForm"><h2>Just for the two of you</h2><p class="small muted" style="margin:0">Money and logging need your PIN. Family viewing the site only see the map, itinerary and public journal posts.</p>' +
+  const names = settings().travellers.filter(n => !/partner/i.test(n));
+  return '<form class="pinbox" id="pinForm"><h2>Crew sign-in</h2><p class="hint">Money and Log are just for ' + (names.length >= 2 ? esc(names.join(' and ')) : 'the two of you') + '. Family visiting the site only ever see the overview, map, trip and journal.</p>' +
     '<div class="field"><label for="pinInput">PIN</label><input id="pinInput" type="password" inputmode="numeric" autocomplete="current-password" required></div>' +
-    '<button class="btn" type="submit">Unlock</button>' + (DEMO ? '<p class="fineprint" style="margin:0">Preview: any PIN works.</p>' : '<p class="fineprint" style="margin:0">This phone remembers it until you lock again.</p>') + '</form>';
+    '<button class="btn primary big" type="submit">Sign in</button><p class="hint">' + (DEMO ? 'Preview: any PIN works.' : 'This phone stays signed in until you sign out at the bottom of the page.') + '</p></form>';
 }
 
-/* ---------- Log forms ---------- */
-function locBlock(defaultText) {
-  const p = state.pick;
-  return '<div class="field"><span class="lbl">Location</span><div class="btnrow"><button type="button" class="btn ghost" data-act="gps">Use my location</button><button type="button" class="btn ghost" data-act="pickmap">Pick on map</button>' + (p ? '<button type="button" class="mini" data-act="clearpick">Clear</button>' : '') + '</div>' +
-    '<div class="loc" id="locStatus">' + (p ? '<b>' + esc(p.label) + '</b> (' + p.lat.toFixed(4) + ', ' + p.lng.toFixed(4) + ')' : esc(defaultText)) + '</div></div>';
+/* ---------- Log ---------- */
+const ICONS = {
+  checkin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  journal: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+  fuel: '<path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16"/><path d="M3 21h13"/><path d="M7 8h5"/><path d="M15 9l3 3v6a1.5 1.5 0 0 0 3 0V9l-3-3"/>',
+  expense: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v5M17.5 9.5v5"/>',
+  stop: '<path d="M12 5v14M5 12h14"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7"/>'
+};
+const svgI = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + '</svg>';
+const ACTIONS = [
+  ['checkin', 'Check in', 'Drop a pin where we are', 'var(--c-overview)'],
+  ['journal', 'Journal', 'A few words and a photo', 'var(--c-journal)'],
+  ['fuel', 'Fuel', 'Log a fill-up', 'var(--c-trip)'],
+  ['expense', 'Expense', 'Anything we spend', 'var(--c-money)'],
+  ['stop', 'Add stop', 'A new stop or detour', 'var(--c-map)']
+];
+const ACOL = Object.fromEntries(ACTIONS.map(a => [a[0], a[3]]));
+
+function locHTML() {
+  const p = state.pick, L = state.loc || {};
+  let cls = '', txt;
+  if (p) { cls = 'ok'; txt = '<b>' + esc(p.label) + '</b>' + (p.acc ? ' <span class="muted">±' + p.acc + ' m</span>' : ''); }
+  else if (L.status === 'finding') { cls = 'finding'; txt = 'Finding your location…'; }
+  else if (L.status === 'error') { cls = 'error'; txt = esc(L.msg) + ' <span class="muted">Choose a stop or pick on the map instead.</span>'; }
+  else txt = '<span class="muted">' + esc(state.locDefault || '') + '</span>';
+  const stopId = p && p.stopId;
+  return '<div class="locwrap" id="locBox">' +
+    '<div class="locopts">' +
+      '<div class="field"><label for="loc-stop">A stop from our plan</label><select id="loc-stop"><option value="">Choose a stop…</option>' +
+        state.data.stops.filter(x => x.lat != null).map(x => '<option value="' + esc(x.id) + '"' + (stopId === x.id ? ' selected' : '') + '>' + esc((x.arrive ? fmtDay(x.arrive, false) + ' · ' : '') + x.name) + '</option>').join('') + '</select></div>' +
+      '<div class="locor">or</div>' +
+      '<div class="btnrow"><button type="button" class="btn ghost" data-act="pickmap">Pick on map</button><button type="button" class="btn ghost" data-act="gps">Use GPS (where we are now)</button></div>' +
+    '</div>' +
+    '<div class="locbox ' + cls + '"><div class="loctext"><span class="locdot"></span><span>' + txt + '</span></div>' + (p ? '<button type="button" class="mini" data-act="clearpick">Clear</button>' : '') + '</div>' +
+  '</div>';
 }
+function updateLoc() { const el = $('#locBox'); if (el) el.outerHTML = locHTML(); }
+function photoHTML() {
+  return state.photo
+    ? '<div class="photoprev"><img src="' + state.photo + '" alt="Selected photo"><button type="button" class="mini" data-act="nophoto">Remove</button></div>'
+    : '<label class="photozone">' + svgI('camera') + '<b>Add a photo</b><span class="small">Take one now or choose from your phone</span><input type="file" id="j-photo" accept="image/*"></label>';
+}
+function chip(name, val, checked) {
+  return '<label class="chipbtn"><input type="radio" name="' + name + '" value="' + esc(val) + '"' + (checked ? ' checked' : '') + '><span>' + esc(val) + '</span></label>';
+}
+function paidChips(name) {
+  const t = settings().travellers.filter(n => !/partner/i.test(n));
+  const opts = ['Joint'].concat(t.length ? t : []);
+  const pick = opts.includes(state.lastPaid) ? state.lastPaid : 'Joint';
+  return '<div class="field"><span class="lbl">Paid by</span><div class="chips" role="radiogroup" aria-label="Paid by">' + opts.map(o => chip(name, o, o === pick)).join('') + '</div></div>';
+}
+function localNow() { const d = new Date(now().getTime() - now().getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
+function whenField() { return '<div class="field"><label for="when">When</label><input id="when" type="datetime-local" value="' + localNow() + '" max="' + localNow() + '"><p class="hint">Leave as now, or change it if you’re catching up on an earlier day.</p></div>'; }
+function submitBtn(label, icon) { return '<button class="btn primary big" type="submit">' + (icon ? svgI(icon) : '') + '<span>' + label + '</span></button>'; }
+
 function logHTML() {
-  const s = settings(), seg = state.logSeg, today = dayIso(now());
-  const q = state.queue.length;
-  let h = (q ? '<div class="queue"><span>' + q + ' entr' + (q === 1 ? 'y' : 'ies') + ' waiting for phone signal</span><button type="button" data-act="flush">Send now</button></div>' : '') +
-    '<div class="seg" role="group" aria-label="What to log">' +
-    [['checkin', 'Check in'], ['journal', 'Journal'], ['fuel', 'Fuel'], ['expense', 'Expense'], ['stop', 'Add stop / detour']].map(([k, v]) => '<button type="button" data-seg="' + k + '" aria-pressed="' + (seg === k) + '">' + v + '</button>').join('') + '</div>';
-  const last = lastCheckin();
+  const s = settings(), seg = state.logSeg, today = dayIso(now()), last = lastCheckin(), q = state.queue.length;
+  const anim = seg !== state.renderedSeg ? ' formin' : '';
+  state.renderedSeg = seg;
+  let h = q ? '<div class="queue"><span>' + q + ' entr' + (q === 1 ? 'y' : 'ies') + ' waiting for phone signal</span><button type="button" data-act="flush">Send now</button></div>' : '';
+  h += '<div class="actions" role="group" aria-label="What to log">' + ACTIONS.map(([k, t, sub, c]) =>
+    '<button type="button" class="action" data-seg="' + k + '" aria-pressed="' + (seg === k) + '" style="--ac:' + c + '"><span class="ic">' + svgI(k) + '</span><b>' + t + '</b><small>' + sub + '</small></button>').join('') + '</div>';
+
   if (seg === 'checkin') {
-    h += '<form class="card" id="f-checkin"><p class="small" style="margin:0">Drops the golden "we\'re here" dot and extends the driven route. Arriving within 20 km of a planned stop ticks it off.</p>' +
-      locBlock('Tap "Use my location" (works best) or pick the spot on the map.') +
-      '<div class="field"><label for="ci-place">Place name (optional)</label><input id="ci-place" placeholder="Worked out automatically if blank"></div>' +
-      '<div class="field"><label for="ci-note">Note for the family (optional)</label><input id="ci-note" placeholder="e.g. Made it across the Nullarbor!"></div>' +
-      '<button class="btn big" type="submit">Check in here</button></form>';
+    state.locDefault = 'No location set yet.';
+    const next = state.data.stops.find(x => x.status === 'planned' && x.lat != null);
+    h += '<form class="card' + anim + '" id="f-checkin"><h3>Check in</h3>' +
+      (next ? '<button type="button" class="arrive" data-act="arrive" data-id="' + esc(next.id) + '"><span class="pinic">' + svgI('checkin') + '</span><span><b>Arrived at ' + esc(next.name) + '</b><small>One tap, uses the stop’s location' + (next.arrive ? ' · planned for ' + esc(fmtDay(next.arrive)) : '') + '</small></span><span class="go" aria-hidden="true">→</span></button><div class="divider">or check in somewhere else</div>' : '') +
+      '<div class="field"><span class="lbl">Location</span>' + locHTML() + '</div>' +
+      whenField() +
+      '<div class="field"><label for="ci-note">Note for the family (optional)</label><input id="ci-note" placeholder="Made it across the Nullarbor!"></div>' +
+      '<details class="more"><summary>Name this place yourself</summary><div><div class="field"><label for="ci-place">Place name</label><input id="ci-place" placeholder="Worked out automatically if blank"></div></div></details>' +
+      submitBtn('Save check-in', 'checkin') + '<p class="hint">Checking in within 20 km of a planned stop ticks it off.</p></form>';
   } else if (seg === 'journal') {
-    h += '<form class="card" id="f-journal">' +
+    state.locDefault = last ? 'Will pin at the last check-in: ' + (last.place || 'last location') + '.' : 'Use GPS or pick a spot to pin it on the map.';
+    h += '<form class="card' + anim + '" id="f-journal"><h3>Journal entry</h3>' +
       '<div class="field"><label for="j-title">Title</label><input id="j-title" required placeholder="Sunset at Lucky Bay"></div>' +
-      '<div class="field"><label for="j-text">Entry</label><textarea id="j-text" placeholder="What happened today…"></textarea></div>' +
-      '<div class="field"><label for="j-photo">Photo</label><input id="j-photo" type="file" accept="image/*">' + (state.photo ? '<img class="preview-img" src="' + state.photo + '" alt="Selected photo">' : '') + '</div>' +
-      locBlock(last ? 'Will pin at your last check-in: ' + (last.place || 'last location') + '.' : 'Use your location or pick a spot to pin it on the map.') +
-      '<label class="check"><input type="checkbox" id="j-public" checked> Family can see this</label>' +
-      '<button class="btn big" type="submit">Post to journal</button></form>';
+      '<div class="field"><label for="j-text">What happened</label><textarea id="j-text" placeholder="Write as much or as little as you like…"></textarea></div>' +
+      '<div class="field"><span class="lbl">Photo</span><div id="photoBox">' + photoHTML() + '</div></div>' +
+      '<div class="field"><span class="lbl">Pin it at</span>' + locHTML() + '</div>' +
+      whenField() +
+      '<label class="switch"><input type="checkbox" id="j-public" checked><span class="track"></span><span>Family can see this</span></label>' +
+      submitBtn('Post to journal', 'journal') + '</form>';
   } else if (seg === 'fuel') {
-    h += '<form class="card" id="f-fuel"><div class="two">' +
-      '<div class="field"><label for="fu-odo">Odometer (km)</label><input id="fu-odo" type="number" inputmode="numeric" step="1" required></div>' +
-      '<div class="field"><label for="fu-l">Litres</label><input id="fu-l" type="number" inputmode="decimal" step="0.01" required></div>' +
-      '<div class="field"><label for="fu-p">$ per litre</label><input id="fu-p" type="number" inputmode="decimal" step="0.001" required></div>' +
-      '<div class="field"><label for="fu-t">Total $</label><input id="fu-t" type="number" inputmode="decimal" step="0.01" placeholder="Auto"></div></div>' +
-      '<div class="field"><label for="fu-place">Where</label><input id="fu-place" placeholder="e.g. Nullarbor Roadhouse"></div>' +
-      '<label class="check"><input type="checkbox" id="fu-full" checked> Filled to full (needed for the real L/100km)</label>' +
-      paidByField('fu-paid', s) +
-      '<button class="btn big" type="submit">Save fill</button><p class="fineprint" style="margin:0">Also added to expenses under Fuel.</p></form>';
+    const lf = (state.data.fuel || []).filter(x => x.odo).sort((a, b) => a.odo - b.odo).pop();
+    h += '<form class="card' + anim + '" id="f-fuel"><h3>Fuel fill-up</h3>' +
+      (lf ? '<p class="hint">Last fill: <b>' + n0(lf.odo) + ' km</b> at ' + esc(lf.place || '—') + ' · $' + (+lf.price).toFixed(2) + '/L</p>' : '') +
+      '<div class="three">' +
+      '<div class="field"><label for="fu-odo">Odometer km</label><input id="fu-odo" type="number" inputmode="numeric" step="1" required placeholder="' + (lf ? 'Over ' + n0(lf.odo) : 'e.g. 41250') + '"></div>' +
+      '<div class="field"><label for="fu-l">Litres</label><input id="fu-l" type="number" inputmode="decimal" step="0.01" required placeholder="0.00"></div>' +
+      '<div class="field"><label for="fu-p">$ per litre</label><input id="fu-p" type="number" inputmode="decimal" step="0.001" required value="' + (lf ? (+lf.price).toFixed(2) : s.price.toFixed(2)) + '"></div></div>' +
+      '<div class="totalbox"><span class="lbl">Total</span><b id="fu-total">$0.00</b></div>' +
+      '<div class="field"><label for="fu-place">Where</label><input id="fu-place" value="' + esc(last ? last.place || '' : '') + '" placeholder="Nullarbor Roadhouse"></div>' +
+      paidChips('fu-paid') +
+      '<label class="switch"><input type="checkbox" id="fu-full" checked><span class="track"></span><span>Filled to full <span class="muted small">(gives your real L/100km)</span></span></label>' +
+      '<details class="more"><summary>Receipt total is different</summary><div><div class="field"><label for="fu-t">Receipt total $</label><input id="fu-t" type="number" inputmode="decimal" step="0.01"></div></div></details>' +
+      submitBtn('Save fill-up', 'fuel') + '<p class="hint">Also added to expenses under Fuel.</p></form>';
   } else if (seg === 'expense') {
-    const cats = (state.data.budget || []).map(b => b.category).filter(c => c !== 'Fuel');
-    h += '<form class="card" id="f-expense"><div class="two">' +
-      '<div class="field"><label for="ex-amt">Amount $</label><input id="ex-amt" type="number" inputmode="decimal" step="0.01" required></div>' +
+    const cats = (state.data.budget || []).map(b => b.category).filter(c => c && c !== 'Fuel');
+    const list = cats.length ? cats : ['Camping', 'Food & groceries', 'Eating out', 'Activities & tours', 'Other'];
+    const cur = list.includes(state.lastCat) ? state.lastCat : list[0];
+    h += '<form class="card' + anim + '" id="f-expense"><h3>Expense</h3>' +
+      '<div class="field"><label for="ex-amt">Amount $</label><input id="ex-amt" class="big-input" type="number" inputmode="decimal" step="0.01" required placeholder="0.00"></div>' +
+      '<div class="field"><span class="lbl">Category</span><div class="chips" role="radiogroup" aria-label="Category">' + list.map(c => chip('ex-cat', c, c === cur)).join('') + '</div></div>' +
+      '<div class="field"><label for="ex-desc">What for</label><input id="ex-desc" placeholder="2 nights, Esperance caravan park"></div>' +
+      paidChips('ex-paid') +
+      '<div class="two"><div class="field"><label for="ex-place">Where</label><input id="ex-place" value="' + esc(last ? last.place || '' : '') + '"></div>' +
       '<div class="field"><label for="ex-date">Date</label><input id="ex-date" type="date" value="' + today + '"></div></div>' +
-      '<div class="field"><label for="ex-cat">Category</label><select id="ex-cat">' + (cats.length ? cats : ['Camping', 'Food & groceries', 'Other']).map(c => '<option>' + esc(c) + '</option>').join('') + '</select></div>' +
-      '<div class="field"><label for="ex-desc">What for</label><input id="ex-desc" placeholder="e.g. 2 nights, Esperance caravan park"></div>' +
-      '<div class="field"><label for="ex-place">Where</label><input id="ex-place" value="' + esc(last ? last.place || '' : '') + '"></div>' +
-      paidByField('ex-paid', s) +
-      '<button class="btn big" type="submit">Save expense</button></form>';
+      submitBtn('Save expense', 'expense') + '</form>';
   } else {
-    const stops = state.data.stops;
-    const lastVisited = stops.filter(x => x.status === 'visited').pop();
-    h += '<form class="card" id="f-stop"><p class="small" style="margin:0">New stops slot into the route, and the map and fuel plan update straight away. To change dates or campsites in bulk, edit the Stops tab in the Sheet.</p>' +
-      '<div class="field"><label for="st-name">Place</label><input id="st-name" required placeholder="e.g. Hamelin Pool, WA"></div>' +
-      '<div class="field"><label for="st-after">Comes after</label><select id="st-after">' + stops.map(x => '<option value="' + esc(x.id) + '"' + (lastVisited && x.id === lastVisited.id ? ' selected' : '') + '>' + esc(fmtDay(x.arrive, false) + ' · ' + x.name) + '</option>').join('') + '</select></div>' +
+    state.locDefault = DEMO ? 'In this preview, pick the spot on the map.' : 'Found from the name, or set it exactly here.';
+    const stops = state.data.stops, lastVisited = stops.filter(x => x.status === 'visited').pop();
+    h += '<form class="card' + anim + '" id="f-stop"><h3>Add a stop or detour</h3><p class="hint">It slots into the route, and the map and fuel plan update straight away.</p>' +
+      '<div class="field"><label for="st-name">Place</label><input id="st-name" required placeholder="Hamelin Pool, WA"></div>' +
+      '<div class="field"><label for="st-after">Comes after</label><select id="st-after">' + stops.map(x => '<option value="' + esc(x.id) + '"' + (lastVisited && x.id === lastVisited.id ? ' selected' : '') + '>' + esc((x.arrive ? fmtDay(x.arrive, false) + ' · ' : '') + x.name) + '</option>').join('') + '</select></div>' +
       '<div class="two"><div class="field"><label for="st-date">Arrive</label><input id="st-date" type="date"></div><div class="field"><label for="st-nights">Nights</label><input id="st-nights" type="number" min="0" step="1" value="1"></div></div>' +
-      '<div class="field"><label for="st-camp">Campsite</label><input id="st-camp"></div>' +
-      locBlock(DEMO ? 'In this preview, pick the spot on the map. The live site finds it from the name.' : 'Leave blank to find it from the name, or set it exactly.') +
-      '<label class="check"><input type="checkbox" id="st-detour" checked> Detour (not in the original plan)</label>' +
-      '<label class="check"><input type="checkbox" id="st-remote"> Remote fuel prices on the way</label>' +
-      '<button class="btn big" type="submit">Add to route</button></form>';
+      '<div class="field"><label for="st-camp">Campsite (optional)</label><input id="st-camp"></div>' +
+      '<div class="field"><span class="lbl">Location</span>' + locHTML() + '</div>' +
+      '<div class="switches"><label class="switch"><input type="checkbox" id="st-detour" checked><span class="track"></span><span>Detour (not in the original plan)</span></label>' +
+      '<label class="switch"><input type="checkbox" id="st-remote"><span class="track"></span><span>Remote fuel prices on the way</span></label></div>' +
+      submitBtn('Add to route', 'stop') + '</form>';
   }
-  h += '<div class="section"><span class="lbl">Map (tap "Pick on map", then tap here)</span><div class="slot slot-log" id="mapSlot" data-mode="log"></div></div>';
-  h += '<p class="fineprint" style="text-align:center"><button class="mini" type="button" data-act="lock">Lock this phone</button></p>';
+  h += '<section class="section"><h2>Logged recently</h2>' + recentHTML() + '</section>';
+  h += '<div class="slot slot-log" id="mapSlot" data-mode="log"></div>';
   return h;
 }
-function paidByField(id, s) {
-  const opts = s.travellers.length ? s.travellers : ['Us'];
-  return '<div class="field"><label for="' + id + '">Paid by</label><select id="' + id + '">' + ['Joint'].concat(opts).map(o => '<option>' + esc(o) + '</option>').join('') + '</select></div>';
+function recentHTML() {
+  const d = state.data, t = now(), items = [];
+  d.checkins.forEach(c => items.push({ k: 'checkin', time: c.time, title: 'Checked in · ' + (c.place || 'on the road'), sub: c.note || '' }));
+  d.journal.forEach(j => items.push({ k: 'journal', time: j.time, title: j.title || 'Journal entry', sub: j.place || '' }));
+  (d.fuel || []).forEach(f => items.push({ k: 'fuel', time: f.time, title: n1(f.litres) + ' L at ' + (f.place || '—'), sub: money2(f.total || 0) }));
+  (d.expenses || []).filter(x => x.category !== 'Fuel').forEach(x => items.push({ k: 'expense', time: x.date + 'T12:00:00', title: x.description || x.category, sub: money2(x.amount || 0) + ' · ' + x.category }));
+  items.sort((a, b) => new Date(b.time) - new Date(a.time));
+  if (!items.length) return '<div class="empty">Nothing logged yet. Your entries will show here.</div>';
+  return '<div class="recent">' + items.slice(0, 6).map(i => '<div class="recent-row"><span class="ic" style="--ac:' + ACOL[i.k] + '">' + svgI(i.k) + '</span><div style="min-width:0"><b>' + esc(i.title) + '</b>' + (i.sub ? '<small>' + esc(i.sub) + '</small>' : '') + '</div><time>' + esc(ago(i.time, t)) + '</time></div>').join('') + '</div>';
 }
-function bindLog() {
+function bindLog(changed) {
   const ph = $('#j-photo');
   if (ph) ph.addEventListener('change', async () => {
     const f = ph.files && ph.files[0]; if (!f) return;
-    try { state.photo = await shrinkPhoto(f); renderPanel(); } catch (e) { toast('Could not read that photo. Try a JPG or PNG.'); }
+    try { state.photo = await shrinkPhoto(f); $('#photoBox').innerHTML = photoHTML(); } catch (e) { toast('Could not read that photo. Try a JPG or PNG.'); }
   });
-  const ft = $('#fu-t'), fl = $('#fu-l'), fp = $('#fu-p');
-  if (fl) [fl, fp].forEach(el => el.addEventListener('input', () => { if (+fl.value && +fp.value) ft.placeholder = (fl.value * fp.value).toFixed(2); }));
+  const fl = $('#fu-l'), fp = $('#fu-p'), ft = $('#fu-t');
+  if (fl) {
+    const upd = () => { const v = +ft.value || (+fl.value * +fp.value) || 0; $('#fu-total').textContent = money2(v); };
+    [fl, fp, ft].forEach(el => el.addEventListener('input', upd)); upd();
+  }
 }
 function shrinkPhoto(file) {
   return new Promise((res, rej) => {
@@ -1514,16 +1798,24 @@ function shrinkPhoto(file) {
     img.src = url;
   });
 }
-function getGPS() {
-  const st = $('#locStatus');
-  if (!navigator.geolocation) { if (st) st.textContent = 'Location isn\'t available on this device. Pick the spot on the map.'; return; }
-  if (st) st.textContent = 'Finding you…';
-  navigator.geolocation.getCurrentPosition(pos => {
-    state.pick = { lat: +pos.coords.latitude.toFixed(5), lng: +pos.coords.longitude.toFixed(5), label: 'Your location (±' + Math.round(pos.coords.accuracy) + ' m)' };
-    renderMap(); renderPanel();
-  }, err => {
-    if ($('#locStatus')) $('#locStatus').textContent = (err.code === 1 ? 'Location permission was blocked.' : 'Couldn\'t get a GPS fix.') + ' Pick the spot on the map instead.';
-  }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+/** Asks the phone for its position; resolves with the pick, or null. */
+function locate() {
+  return new Promise(res => {
+    if (!navigator.geolocation) { state.loc = { status: 'error', msg: 'Location isn’t available on this device.' }; updateLoc(); return res(null); }
+    state.loc = { status: 'finding' }; updateLoc();
+    navigator.geolocation.getCurrentPosition(pos => {
+      state.pick = { lat: +pos.coords.latitude.toFixed(5), lng: +pos.coords.longitude.toFixed(5), label: 'Your location', acc: Math.round(pos.coords.accuracy) };
+      state.loc = { status: 'ok' }; updateLoc(); renderMap(); res(state.pick);
+    }, err => {
+      state.loc = { status: 'error', msg: err.code === 1 ? 'Location is blocked for this site.' : 'Couldn’t get a GPS fix.' }; updateLoc(); res(null);
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+  });
+}
+function flashSaved() {
+  const b = $('#panel form .btn.big'); if (!b) return;
+  const html = b.innerHTML;
+  b.classList.add('done'); b.innerHTML = svgI('check') + '<span>Saved</span>';
+  setTimeout(() => { if (b.isConnected) { b.classList.remove('done'); b.innerHTML = html; } }, 1600);
 }
 
 /* =========================================================
@@ -1534,6 +1826,7 @@ function applyLocal(action, p) {
   const has = (arr, id) => (arr || []).some(x => x.id === id);
   if (action === 'checkin' && !has(d.checkins, p.id)) {
     d.checkins.push({ id: p.id, time: p.time, lat: p.lat, lng: p.lng, place: p.place || '', note: p.note || '', km: null, poly: '' });
+    sortData(d);
     let best = null;
     d.stops.forEach(s => { if (s.status === 'planned' && s.lat != null) { const k = haversine(s, p); if (k < 20 && (!best || k < best.k)) best = { s, k }; } });
     if (best) best.s.status = 'visited';
@@ -1555,11 +1848,12 @@ function applyLocal(action, p) {
 }
 async function save(action, payload) {
   payload.id = payload.id || uid(action[0].toUpperCase());
-  payload.time = payload.time || new Date().toISOString();
+  payload.time = payload.time || (DEMO ? new Date(now().getTime() + 60000) : new Date()).toISOString();
   applyLocal(action, payload);
-  state.pick = null; state.photo = null;
+  state.pick = null; state.photo = null; state.loc = { status: 'done' };
   render();
-  if (DEMO) { toast('Saved in this preview. Connect your Sheet to save for real.'); return; }
+  flashSaved();
+  if (DEMO) { toast('Saved in this preview. Connect your Sheet to save for real.', true); return; }
   state.queue.push({ action, payload });
   if (!LS.set('hl27_queue', state.queue)) toast('Saved, but too big to keep offline. Keep this page open until it sends.');
   await flush(true);
@@ -1580,7 +1874,7 @@ async function flush(fromSave) {
         state.queue.shift();
       } else {
         state.queue.shift(); sent++;
-        state.data = j.data; state.unlocked = true;
+        state.data = sortData(j.data); state.unlocked = true;
         LS.set('hl27_cache', j.data);
       }
       LS.set('hl27_queue', state.queue);
@@ -1590,7 +1884,7 @@ async function flush(fromSave) {
   state.queue.forEach(q => applyLocal(q.action, q.payload));
   render();
   if (failedNet && fromSave) toast('No signal. Saved on this phone and will send when you\'re back in range.');
-  else if (sent) toast(sent === 1 ? 'Saved to the Sheet.' : sent + ' entries saved to the Sheet.');
+  else if (sent) toast(sent === 1 ? 'Saved to the Sheet.' : sent + ' entries saved to the Sheet.', true);
 }
 function lockPhone() { state.pin = ''; state.unlocked = false; LS.set('hl27_pin', ''); }
 
@@ -1599,64 +1893,106 @@ function lockPhone() { state.pin = ''; state.unlocked = false; LS.set('hl27_pin'
    ========================================================= */
 document.addEventListener('click', e => {
   const tabBtn = e.target.closest('#tabs button');
-  if (tabBtn) { state.tab = tabBtn.dataset.tab; LS.set('hl27_tab', state.tab); renderHeader(); renderPanel(); return; }
+  if (tabBtn) { goTab(tabBtn.dataset.tab); return; }
   const segBtn = e.target.closest('[data-seg]');
-  if (segBtn) { state.logSeg = segBtn.dataset.seg; renderPanel(); return; }
+  if (segBtn) { if (state.logSeg !== segBtn.dataset.seg) { state.logSeg = segBtn.dataset.seg; state.loc = { status: 'idle' }; state.segChanged = true; } renderPanel(); return; }
   const go = e.target.closest('[data-goto]');
-  if (go) { state.tab = go.dataset.goto; LS.set('hl27_tab', state.tab); renderHeader(); renderPanel(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  if (go) { goTab(go.dataset.goto); return; }
   const a = e.target.closest('[data-act]'); if (!a) return;
   const act = a.dataset.act;
   if (act === 'base') { state.base = a.dataset.base; LS.set('hl27_base', state.base); setTiles(); return; }
   if (act === 'fit') { fitAll(true); return; }
-  if (act === 'enlarge') { if (state.tab === 'overview') { state.tab = 'map'; LS.set('hl27_tab', 'map'); renderHeader(); renderPanel(); } else toggleExpand(); return; }
+  if (act === 'enlarge') {
+    if (state.tab === 'overview') { goTab('map'); return; }
+    if (state.picking) { state.picking = false; $('#pickHint').hidden = true; map.getContainer().style.cursor = ''; }
+    toggleExpand(); return;
+  }
   if (act === 'status') { e.stopPropagation(); save('stopStatus', { id: a.dataset.id, status: a.dataset.status }); }
   else if (act === 'focus') { focusOnMap(state.data.stops.find(s => s.id === a.dataset.id)); }
   else if (act === 'focusj') { focusOnMap(state.data.journal.find(s => s.id === a.dataset.id)); }
-  else if (act === 'gps') getGPS();
+  else if (act === 'gps') locate();
   else if (act === 'pickmap') {
     state.picking = true; $('#pickHint').hidden = false; map.getContainer().style.cursor = 'crosshair';
-    $('#mapwrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const slot = $('#mapSlot');
+    if (slot && slot.dataset.mode === 'log') toggleExpand(true);
+    else $('#mapwrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  else if (act === 'clearpick') { state.pick = null; renderMap(); renderPanel(); }
+  else if (act === 'clearpick') { state.pick = null; state.loc = { status: 'idle' }; updateLoc(); renderMap(); }
+  else if (act === 'nophoto') { state.photo = null; $('#photoBox').innerHTML = photoHTML(); bindLog(false); }
+  else if (act === 'arrive') {
+    const st = state.data.stops.find(x => x.id === a.dataset.id); if (!st) return;
+    const note = ($('#ci-note') || {}).value || '';
+    save('checkin', { lat: st.lat, lng: st.lng, place: st.name, note: note.trim() }).then(() => toast('Checked in at ' + st.name, true));
+  }
   else if (act === 'flush') flush(true);
-  else if (act === 'lock') { lockPhone(); if (!DEMO) load(); else render(); }
+  else if (act === 'crew') { goTab('crew'); setTimeout(() => { const i = $('#pinInput'); if (i) i.focus(); }, 350); }
+  else if (act === 'lock') { lockPhone(); state.tab = 'overview'; if (!DEMO) load(); else render(); }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $('#mapwrap').classList.contains('expanded')) { toggleExpand(false); return; }
+  if (e.key === 'Escape' && $('#mapwrap').classList.contains('expanded')) { state.picking = false; $('#pickHint').hidden = true; toggleExpand(false); return; }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.stop[data-act="focus"]')) { e.preventDefault(); e.target.click(); }
 });
+document.addEventListener('change', e => {
+  if (e.target.id !== 'loc-stop') return;
+  const st = state.data.stops.find(x => x.id === e.target.value);
+  state.pick = st ? { lat: st.lat, lng: st.lng, label: st.name, stopId: st.id } : null;
+  state.loc = { status: st ? 'ok' : 'idle' };
+  updateLoc(); renderMap();
+});
+// Ripple on press
+document.addEventListener('pointerdown', e => {
+  const t = e.target.closest('.btn, .tabs button, .action, .chipbtn span, .mini, .mapbtn, .layers button, .arrive, .rp');
+  if (!t || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const r = t.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2, s = document.createElement('span');
+  s.className = 'ripple';
+  s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
+  t.appendChild(s); setTimeout(() => s.remove(), 600);
+});
+function whenIso() { const el = $('#when'); if (!el || !el.value) return undefined; const d = new Date(el.value); return isNaN(d) ? undefined : d.toISOString(); }
 document.addEventListener('submit', async e => {
   e.preventDefault();
   const f = e.target, v = id => { const el = $('#' + id); return el ? el.value.trim() : ''; }, ck = id => !!($('#' + id) || {}).checked;
+  const radio = n => { const el = f.querySelector('input[name="' + n + '"]:checked'); return el ? el.value : ''; };
+  const btn = f.querySelector('[type=submit]');
   if (f.id === 'pinForm') {
     const pin = v('pinInput'); if (!pin) return;
-    if (DEMO) { state.pin = pin; state.unlocked = true; render(); return; }
+    if (DEMO) { state.pin = pin; state.unlocked = true; state.tab = 'log'; render(); toast('Signed in on this phone.', true); return; }
+    if (btn) btn.disabled = true;
     try {
       const r = await fetch(CONFIG.API_URL + '?action=ping&pin=' + encodeURIComponent(pin)); const j = await r.json();
-      if (j.unlocked) { state.pin = pin; LS.set('hl27_pin', pin); toast('Unlocked on this phone.'); load(); }
-      else toast('That PIN doesn\'t match the one in the Settings tab.');
-    } catch (err) { toast('Can\'t check the PIN without signal. Try again when you\'re back in range.'); }
+      if (j.unlocked) { state.pin = pin; LS.set('hl27_pin', pin); state.tab = 'log'; toast('Signed in on this phone.', true); load(); }
+      else { toast('That PIN doesn’t match the one in the Settings tab.'); if (btn) btn.disabled = false; }
+    } catch (err) { toast('Can’t check the PIN without signal. Try again when you’re back in range.'); if (btn) btn.disabled = false; }
     return;
   }
-  const pick = state.pick, last = lastCheckin();
+  const last = lastCheckin();
   if (f.id === 'f-checkin') {
-    if (!pick) { toast('Set a location first: use your location or pick on the map.'); return; }
-    await save('checkin', { lat: pick.lat, lng: pick.lng, place: v('ci-place'), note: v('ci-note') });
-    toast('Checked in.');
+    let pick = state.pick;
+    if (!pick) { toast('Set the location first: choose a stop, pick on the map or use GPS.'); return; }
+    await save('checkin', { lat: pick.lat, lng: pick.lng, place: v('ci-place') || (pick.stopId ? pick.label : ''), note: v('ci-note'), time: whenIso() });
+    toast('Checked in.', true);
   } else if (f.id === 'f-journal') {
-    const loc = pick || last;
-    await save('journal', { title: v('j-title'), text: v('j-text'), photo: state.photo || '', lat: loc ? loc.lat : null, lng: loc ? loc.lng : null, place: pick ? '' : (last ? last.place : ''), public: ck('j-public') });
+    const loc = state.pick || last;
+    await save('journal', { title: v('j-title'), text: v('j-text'), photo: state.photo || '', lat: loc ? loc.lat : null, lng: loc ? loc.lng : null, place: state.pick ? (state.pick.stopId ? state.pick.label : '') : (last ? last.place : ''), public: ck('j-public'), time: whenIso() });
   } else if (f.id === 'f-fuel') {
-    await save('fuel', { odo: +v('fu-odo'), litres: +v('fu-l'), price: +v('fu-p'), total: +v('fu-t') || null, place: v('fu-place'), full: ck('fu-full'), paidBy: v('fu-paid'), lat: pick ? pick.lat : null, lng: pick ? pick.lng : null });
+    state.lastPaid = radio('fu-paid');
+    await save('fuel', { odo: +v('fu-odo'), litres: +v('fu-l'), price: +v('fu-p'), total: +v('fu-t') || null, place: v('fu-place'), full: ck('fu-full'), paidBy: radio('fu-paid'), lat: state.pick ? state.pick.lat : null, lng: state.pick ? state.pick.lng : null });
   } else if (f.id === 'f-expense') {
-    await save('expense', { amount: +v('ex-amt'), date: v('ex-date'), category: v('ex-cat'), description: v('ex-desc'), place: v('ex-place'), paidBy: v('ex-paid') });
+    state.lastCat = radio('ex-cat'); state.lastPaid = radio('ex-paid');
+    await save('expense', { amount: +v('ex-amt'), date: v('ex-date'), category: radio('ex-cat'), description: v('ex-desc'), place: v('ex-place'), paidBy: radio('ex-paid') });
   } else if (f.id === 'f-stop') {
-    if (DEMO && !pick) { toast('In the preview, pick the spot on the map first.'); return; }
-    await save('addStop', { name: v('st-name'), afterId: v('st-after'), arrive: v('st-date'), nights: +v('st-nights') || 0, campsite: v('st-camp'), lat: pick ? pick.lat : null, lng: pick ? pick.lng : null, type: ck('st-detour') ? 'detour' : 'planned', remote: ck('st-remote') });
+    if (DEMO && !state.pick) { toast('In the preview, pick the spot on the map first.'); return; }
+    await save('addStop', { name: v('st-name'), afterId: v('st-after'), arrive: v('st-date'), nights: +v('st-nights') || 0, campsite: v('st-camp'), lat: state.pick ? state.pick.lat : null, lng: state.pick ? state.pick.lng : null, type: ck('st-detour') ? 'detour' : 'planned', remote: ck('st-remote') });
   }
 });
 let toastT;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3800); }
+function toast(msg, ok) {
+  const t = $('#toast');
+  t.innerHTML = (ok ? svgI('check') : '') + '<span>' + esc(msg) + '</span>';
+  const s = t.querySelector('svg'); if (s) { s.style.width = '18px'; s.style.height = '18px'; s.style.flex = 'none'; }
+  t.hidden = true; void t.offsetWidth; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3600);
+}
 window.addEventListener('online', () => flush(false));
 setInterval(() => flush(false), 60000);
 
@@ -1667,13 +2003,13 @@ async function load() {
   if (DEMO) { if (!state.data) state.data = demoData(); state.unlocked = !!state.pin; render(); return; }
   if (!state.data) {
     const cached = LS.get('hl27_cache', null);
-    if (cached) { state.data = cached; state.unlocked = !!(state.pin && cached.fuel); state.queue.forEach(q => applyLocal(q.action, q.payload)); render(); }
+    if (cached) { state.data = sortData(cached); state.unlocked = !!(state.pin && cached.fuel); state.queue.forEach(q => applyLocal(q.action, q.payload)); render(); }
   }
   try {
     const r = await fetch(CONFIG.API_URL + '?action=data' + (state.pin ? '&pin=' + encodeURIComponent(state.pin) : ''));
     const j = await r.json();
     if (!j.ok) throw new Error(j.error);
-    state.data = j.data; state.unlocked = !!j.unlocked;
+    state.data = sortData(j.data); state.unlocked = !!j.unlocked;
     if (state.pin && !j.unlocked) lockPhone();
     LS.set('hl27_cache', j.data);
     state.queue.forEach(q => applyLocal(q.action, q.payload));
@@ -1725,7 +2061,7 @@ function demoData() {
     '<rect width="600" height="400" fill="url(#s)"/><circle cx="430" cy="' + sy + '" r="46" fill="' + sun + '" opacity=".9"/><path d="M0 270 Q150 240 300 262 T600 250 V400 H0Z" fill="' + g + '"/><path d="M0 320 Q200 300 420 318 T600 312 V400 H0Z" fill="' + g + '" opacity=".7"/>' +
     '<text x="20" y="385" font-family="sans-serif" font-size="16" fill="#fff" opacity=".8">Sample photo</text></svg>');
   return {
-    settings: { tripName: "Lloyd's Half Lap 27", startDate: '2027-04-10', endDate: '2027-07-10', economy: 14, useLoggedEconomy: 'TRUE', tankLitres: 76, reserveLitres: 15, jerryLitres: 0, fuelPrice: 2.10, remoteFuelPrice: 2.70, travellers: 'Tom, Partner' },
+    settings: { tripName: "Lloyd's Half Lap 27", startDate: '2027-04-10', endDate: '2027-07-10', economy: 14, useLoggedEconomy: 'TRUE', tankLitres: 76, reserveLitres: 15, jerryLitres: 0, fuelPrice: 2.10, remoteFuelPrice: 2.70, travellers: 'Tom, Alicia' },
     stops,
     legs: {},
     checkins: [
@@ -1755,7 +2091,7 @@ function demoData() {
       { id: 'E2', date: '2027-04-10', category: 'Fuel', amount: 108.26, description: '51.8 L diesel', paidBy: 'Joint', place: 'Gundagai' },
       { id: 'E3', date: '2027-04-10', category: 'Fuel', amount: 71.81, description: '33.4 L diesel', paidBy: 'Joint', place: 'Hay' },
       { id: 'E4', date: '2027-04-10', category: 'Camping', amount: 48, description: 'Powered site', paidBy: 'Joint', place: 'Mildura' },
-      { id: 'E5', date: '2027-04-10', category: 'Eating out', amount: 36.5, description: 'Fish and chips', paidBy: 'Partner', place: 'Mildura' },
+      { id: 'E5', date: '2027-04-10', category: 'Eating out', amount: 36.5, description: 'Fish and chips', paidBy: 'Alicia', place: 'Mildura' },
       { id: 'E6', date: '2027-04-11', category: 'Fuel', amount: 87.36, description: '42 L diesel', paidBy: 'Joint', place: 'Mildura' },
       { id: 'E7', date: '2027-04-11', category: 'Camping', amount: 112, description: '2 nights', paidBy: 'Joint', place: 'Adelaide' },
       { id: 'E8', date: '2027-04-12', category: 'Food & groceries', amount: 164.2, description: 'Central Market + Coles', paidBy: 'Tom', place: 'Adelaide' },
