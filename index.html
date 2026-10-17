@@ -3,7 +3,7 @@
 <head>
 <title>Lloyd's Half Lap 27</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="theme-color" content="#0c6b4f">
+<meta name="theme-color" content="#c9d6c9">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
@@ -678,22 +678,29 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </style>
 <style>
 /* Layout: map fills the left (top on phones); a scrolling road-sign panel on the right (below on phones). */
+/* Layout: map fills the left (top on phones); a scrolling panel on the right (below on phones). Palette: Retro Surf, Cool Aloe leading. */
 :root {
-  --bg: #eef1ee;
-  --panel: #ffffff;
-  --ink: #17231e;
-  --muted: #5b6a63;
-  --line: #d4ddd8;
-  --sign: #0c6b4f;          /* Australian guide-sign green */
-  --sign-ink: #ffffff;
-  --warn: #f2b705;          /* warning-sign yellow */
-  --warn-ink: #1d1a0f;
-  --brown: #6e4224;         /* tourist-sign brown: journal */
-  --sea: #c9dadd;
-  --land: #e8e2d2;
-  --land-edge: #b9b29e;
-  --danger: #b3321f;
-  --f-display: "Overpass", "Highway Gothic", "Arial Narrow", system-ui, sans-serif;
+  --bg: #f6f1e8;            /* Coconut Milk */
+  --panel: #fffdf9;
+  --ink: #26302d;
+  --muted: #66716d;
+  --line: #e3dccd;
+  --sign: #c9d6c9;          /* Cool Aloe: header plate, tabs, leg signs, buttons */
+  --sign-ink: #23302b;
+  --sign-edge: #fffdf9;
+  --route: #5f8784;         /* deepened Faded Surf: planned route, stop dots */
+  --ferry: #91aeac;         /* Faded Surf */
+  --drive: #db9773;         /* Sunset Glow: where we've driven */
+  --casing: #3b2a22;
+  --warn: #e0c37e;          /* Golden Hour: you-are-here, warnings */
+  --warn-ink: #2e2612;
+  --brown: #c27652;         /* Sunset Glow, deepened: journal pins */
+  --peach: #e5c3ae;         /* Peach Fuzz */
+  --sea: #d6e3e1;
+  --land: #efe8da;
+  --land-edge: #cdc4b1;
+  --danger: #b5502f;
+  --f-display: "Overpass", "Arial Narrow", system-ui, sans-serif;
   --f-body: "Overpass", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-journal: "Literata", Georgia, "Times New Roman", serif;
   --f-mono: "Overpass Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -701,15 +708,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1613; --panel: #18211d; --ink: #e5ece8; --muted: #94a59c; --line: #2a3832;
-    --sign: #157c5c; --sign-ink: #ffffff; --warn: #f2b705; --warn-ink: #1d1a0f; --brown: #9a6640;
-    --sea: #0c171b; --land: #232c27; --land-edge: #3a463f; --danger: #e0644f; color-scheme: dark;
+    --bg: #1a2120; --panel: #222b29; --ink: #eee8dd; --muted: #a2aca8; --line: #36413e;
+    --sign: #c9d6c9; --sign-ink: #23302b; --sign-edge: #f6f1e8; --route: #9fc1bd; --ferry: #91aeac;
+    --drive: #db9773; --casing: #120d0a; --warn: #e0c37e; --warn-ink: #2e2612; --brown: #d08660; --peach: #e5c3ae;
+    --sea: #142120; --land: #283230; --land-edge: #44504c; --danger: #e48a68; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1613; --panel: #18211d; --ink: #e5ece8; --muted: #94a59c; --line: #2a3832;
-  --sign: #157c5c; --sign-ink: #ffffff; --warn: #f2b705; --warn-ink: #1d1a0f; --brown: #9a6640;
-  --sea: #0c171b; --land: #232c27; --land-edge: #3a463f; --danger: #e0644f; color-scheme: dark;
+  --bg: #1a2120; --panel: #222b29; --ink: #eee8dd; --muted: #a2aca8; --line: #36413e;
+  --sign: #c9d6c9; --sign-ink: #23302b; --sign-edge: #f6f1e8; --route: #9fc1bd; --ferry: #91aeac;
+  --drive: #db9773; --casing: #120d0a; --warn: #e0c37e; --warn-ink: #2e2612; --brown: #d08660; --peach: #e5c3ae;
+  --sea: #142120; --land: #283230; --land-edge: #44504c; --danger: #e48a68; color-scheme: dark;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -729,14 +738,14 @@ aside { overflow-y: auto; border-left: 1px solid var(--line); background: var(--
 
 /* Sign plate header */
 .plate { background: var(--sign); color: var(--sign-ink); border-radius: 12px; padding: 5px; }
-.plate-in { border: 2.5px solid var(--sign-ink); border-radius: 8px; padding: 14px 16px 12px; display: grid; gap: 10px; }
+.plate-in { border: 2.5px solid var(--sign-edge); border-radius: 8px; padding: 14px 16px 12px; display: grid; gap: 10px; }
 .plate h1 { margin: 0; font: 900 clamp(24px, 4.2vw, 30px)/1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
 .plate .route { font: 600 13px/1.3 var(--f-display); text-transform: uppercase; letter-spacing: .06em; opacity: .9; }
-.plate .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; border-top: 1.5px solid rgba(255,255,255,.45); padding-top: 10px; }
+.plate .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; border-top: 1.5px solid color-mix(in srgb, var(--sign-ink) 22%, transparent); padding-top: 10px; }
 .plate .stat b { display: block; font: 600 20px/1.1 var(--f-mono); font-variant-numeric: tabular-nums; }
 .plate .stat span { font-size: 11.5px; text-transform: uppercase; letter-spacing: .07em; opacity: .85; }
 .where { display: flex; gap: 10px; align-items: center; font-size: 14px; }
-.where .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 3px rgba(242,183,5,.35); flex: none; }
+.where .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 40%, transparent); flex: none; }
 .banner { background: var(--warn); color: var(--warn-ink); border-radius: 8px; padding: 9px 12px; font-size: 13.5px; line-height: 1.4; }
 .banner b { font-weight: 800; }
 
@@ -765,19 +774,20 @@ h2 { margin: 0; font: 800 15px/1.2 var(--f-display); text-transform: uppercase; 
 .week { font: 800 12px/1 var(--f-display); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 12px 0 2px; display: flex; gap: 8px; align-items: center; }
 .week::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .leg { margin: 2px 0 2px 22px; display: grid; gap: 5px; }
-.legsign { display: flex; align-items: center; gap: 8px; background: var(--sign); color: var(--sign-ink); border-radius: 6px; padding: 5px 10px 4px; font: 700 13px/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .04em; width: fit-content; max-width: 100%; }
-.legsign.ferry { background: #2d5f7a; }
+.legsign { display: flex; align-items: center; gap: 8px; background: var(--sign); color: var(--sign-ink); border-radius: 6px; padding: 5px 10px 4px; border: 1px solid color-mix(in srgb, var(--sign-ink) 12%, transparent); font: 700 13px/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .04em; width: fit-content; max-width: 100%; }
+.legsign.ferry { background: var(--ferry); color: var(--sign-ink); }
 .legsign .km { font: 600 13px var(--f-mono); }
 .legsign svg { width: 14px; height: 14px; flex: none; }
 .legmeta { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--panel); white-space: nowrap; }
 .chip.warn { background: var(--warn); color: var(--warn-ink); border-color: transparent; }
 .chip.ok { background: var(--sign); color: var(--sign-ink); border-color: transparent; }
+.chip.peach { background: var(--peach); color: var(--warn-ink); border-color: transparent; }
 .chip.detour { border-color: var(--brown); color: var(--brown); }
 .stop { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 10px; align-items: start; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; cursor: pointer; text-align: left; width: 100%; }
-.stop:hover { border-color: var(--sign); }
-.stop .pin { width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid var(--sign); background: var(--panel); margin-top: 4px; }
-.stop.visited .pin { background: var(--sign); }
+.stop:hover { border-color: var(--route); }
+.stop .pin { width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid var(--route); background: var(--panel); margin-top: 4px; }
+.stop.visited .pin { background: var(--route); }
 .stop.skipped { opacity: .55; }
 .stop.skipped .pin { border-color: var(--muted); border-style: dashed; }
 .stop.detour .pin { border-color: var(--brown); }
@@ -787,7 +797,7 @@ h2 { margin: 0; font: 800 15px/1.2 var(--f-display); text-transform: uppercase; 
 .stop .row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
 .gap { border: 1.5px dashed var(--line); border-radius: var(--r); padding: 12px; color: var(--muted); font-size: 14px; }
 .mini { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 3px 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-.mini:hover { border-color: var(--sign); color: var(--sign); }
+.mini:hover { border-color: var(--route); color: var(--route); }
 
 /* Journal */
 .entry { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
@@ -804,7 +814,7 @@ h2 { margin: 0; font: 800 15px/1.2 var(--f-display); text-transform: uppercase; 
 .bar { display: grid; gap: 4px; }
 .bar .top { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
 .bar .track { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
-.bar .fill { height: 100%; background: var(--sign); border-radius: 4px; }
+.bar .fill { height: 100%; background: var(--route); border-radius: 4px; }
 .bar .fill.over { background: var(--danger); }
 .tablewrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -824,8 +834,8 @@ form.card { background: var(--panel); border: 1px solid var(--line); border-radi
 .field textarea { min-height: 110px; resize: vertical; font-family: var(--f-journal); }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-.check input { width: 18px; height: 18px; accent-color: var(--sign); }
-.btn { border: 0; border-radius: 8px; padding: 11px 14px; font: 800 14px/1 var(--f-display); text-transform: uppercase; letter-spacing: .06em; cursor: pointer; background: var(--sign); color: var(--sign-ink); }
+.check input { width: 18px; height: 18px; accent-color: var(--route); }
+.btn { border: 1px solid color-mix(in srgb, var(--sign-ink) 18%, transparent); border-radius: 8px; padding: 11px 14px; font: 800 14px/1 var(--f-display); text-transform: uppercase; letter-spacing: .06em; cursor: pointer; background: var(--sign); color: var(--sign-ink); }
 .btn.ghost { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
 .btn.big { padding: 15px; font-size: 16px; }
 .btnrow { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -839,9 +849,9 @@ form.card { background: var(--panel); border: 1px solid var(--line); border-radi
 .legend { position: absolute; z-index: 500; left: max(10px, env(safe-area-inset-left, 0px)); bottom: 22px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: grid; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
 .legend div { display: flex; align-items: center; gap: 7px; }
 .legend i { display: inline-block; flex: none; }
-.lg-plan { width: 22px; border-top: 3px dashed var(--sign); }
-.lg-drive { width: 22px; height: 5px; background: var(--warn); border: 1px solid #222; border-radius: 3px; }
-.lg-dot { width: 11px; height: 11px; border-radius: 50%; border: 2.5px solid var(--sign); background: var(--sign); }
+.lg-plan { width: 22px; border-top: 3px dashed var(--route); }
+.lg-drive { width: 22px; height: 5px; background: var(--drive); border: 1px solid var(--casing); border-radius: 3px; }
+.lg-dot { width: 11px; height: 11px; border-radius: 50%; border: 2.5px solid var(--route); background: var(--route); }
 .lg-jr { width: 13px; height: 13px; border-radius: 3px; background: var(--brown); }
 .pickhint { position: absolute; z-index: 600; top: 12px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 13.5px; box-shadow: 0 3px 10px rgba(0,0,0,.25); white-space: nowrap; }
 .mapbtn { position: absolute; z-index: 500; right: max(10px, env(safe-area-inset-right, 0px)); bottom: 22px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-weight: 700; font-size: 12.5px; cursor: pointer; }
@@ -852,16 +862,16 @@ form.card { background: var(--panel); border: 1px solid var(--line); border-radi
 .leaflet-popup-content h4 { margin: 0 0 2px; font: 700 15px/1.25 var(--f-display); }
 .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
 .leaflet-bar a, .leaflet-control-attribution { background: var(--panel) !important; color: var(--ink) !important; }
-.leaflet-control-attribution a { color: var(--sign) !important; }
+.leaflet-control-attribution a { color: var(--route) !important; }
 .jtip { width: 190px; white-space: normal; padding: 0 !important; overflow: hidden; }
 .jtip img { display: block; width: 100%; height: 110px; object-fit: cover; }
 .jtip div { padding: 6px 9px 8px; }
 .jtip b { font: 600 14px/1.25 var(--f-journal); display: block; }
 .jpop img { width: 100%; border-radius: 6px; margin: 4px 0 6px; }
 .jpop p { margin: 4px 0 0; font: 14px/1.5 var(--f-journal); white-space: pre-line; max-height: 200px; overflow: auto; }
-.jicon { width: 22px; height: 22px; border-radius: 5px; background: var(--brown); border: 2px solid #fff; display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.jicon { width: 22px; height: 22px; border-radius: 5px; background: var(--brown); border: 2px solid var(--panel); display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
 .jicon svg { width: 12px; height: 12px; }
-.here { width: 18px; height: 18px; border-radius: 50%; background: var(--warn); border: 3px solid #1d1a0f; position: relative; }
+.here { width: 18px; height: 18px; border-radius: 50%; background: var(--warn); border: 3px solid var(--casing); position: relative; }
 .here::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid var(--warn); animation: ping 2s ease-out infinite; }
 @keyframes ping { from { transform: scale(.5); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .here::after { animation: none; opacity: .5; } }
@@ -1072,12 +1082,12 @@ function fitAll(animate) {
 function renderMap() {
   if (!map) return;
   layers.clearLayers();
-  const sign = css('--sign'), warn = css('--warn'), muted = css('--muted'), panel = css('--panel');
+  const sign = css('--route'), warn = css('--warn'), muted = css('--muted'), panel = css('--panel'), drive = css('--drive'), casing = css('--casing');
 
   // Planned route: road shape where the Sheet has it, straight dashes otherwise
   legs().forEach(l => {
     const pts = l.poly || [[l.from.lat, l.from.lng], [l.to.lat, l.to.lng]];
-    L.polyline(pts, { color: l.ferry ? '#2d5f7a' : sign, weight: l.ferry ? 2.5 : 3.5, opacity: .85, dashArray: l.ferry ? '2 7' : '7 7', interactive: false }).addTo(layers);
+    L.polyline(pts, { color: l.ferry ? css('--ferry') : sign, weight: l.ferry ? 2.5 : 3.5, opacity: .85, dashArray: l.ferry ? '2 7' : '7 7', interactive: false }).addTo(layers);
   });
 
   // Driven route from check-ins
@@ -1088,8 +1098,8 @@ function renderMap() {
       const seg = c[i].poly ? decodePoly(c[i].poly) : [[c[i - 1].lat, c[i - 1].lng], [c[i].lat, c[i].lng]];
       pts.push(...seg);
     }
-    L.polyline(pts, { color: '#1d1a0f', weight: 8, opacity: .55, interactive: false }).addTo(layers);
-    L.polyline(pts, { color: warn, weight: 4.5, opacity: 1, interactive: false }).addTo(layers);
+    L.polyline(pts, { color: casing, weight: 8, opacity: .45, interactive: false }).addTo(layers);
+    L.polyline(pts, { color: drive, weight: 4.5, opacity: 1, interactive: false }).addTo(layers);
   }
 
   // Stops
@@ -1134,7 +1144,7 @@ function renderMap() {
 
   // Picked spot for a form
   if (state.pick) {
-    L.circleMarker([state.pick.lat, state.pick.lng], { radius: 9, color: '#1d1a0f', weight: 2, fillColor: warn, fillOpacity: .9 }).addTo(layers);
+    L.circleMarker([state.pick.lat, state.pick.lng], { radius: 9, color: casing, weight: 2, fillColor: warn, fillOpacity: .9 }).addTo(layers);
   }
   if (!state.fitted) { fitAll(false); state.fitted = true; }
 }
@@ -1174,7 +1184,7 @@ function renderHeader() {
   const last = lastCheckin();
   $('#where').innerHTML = last
     ? '<span class="dot"></span><span>Last check-in: <b>' + esc(last.place || 'on the road') + '</b> · ' + esc(ago(last.time, t)) + (last.note ? ' — ' + esc(last.note) : '') + '</span>'
-    : '<span class="dot"></span><span>No check-ins yet. The yellow dot will show where we are once we hit the road.</span>';
+    : '<span class="dot"></span><span>No check-ins yet. The golden dot will show where we are once we hit the road.</span>';
   const b = $('#demoBanner');
   if (DEMO) { b.hidden = false; b.innerHTML = '<b>Preview with sample entries.</b> Your real itinerary is loaded; the check-ins, journal posts and spending from 10–14 April are made up to show how it looks. Any PIN unlocks Money and Log here.'; }
   else b.hidden = true;
@@ -1235,7 +1245,7 @@ function tripHTML() {
       '<div class="row">' +
       (st.status === 'visited' ? '<span class="chip ok">Visited</span>' : st.status === 'skipped' ? '<span class="chip">Skipped</span>' : '') +
       (st.type === 'detour' ? '<span class="chip detour">Detour</span>' : '') +
-      (st.booked ? '<span class="chip ok">Booked</span>' : '') +
+      (st.booked ? '<span class="chip peach">Booked</span>' : '') +
       (state.unlocked ? (st.status !== 'visited' ? '<button class="mini" data-act="status" data-status="visited" data-id="' + esc(st.id) + '">Arrived</button>' : '') +
         (st.status !== 'skipped' && st.status !== 'visited' ? '<button class="mini" data-act="status" data-status="skipped" data-id="' + esc(st.id) + '">Skip</button>' : '') +
         (st.status !== 'planned' ? '<button class="mini" data-act="status" data-status="planned" data-id="' + esc(st.id) + '">Undo</button>' : '') : '') +
@@ -1325,7 +1335,7 @@ function logHTML() {
     [['checkin', 'Check in'], ['journal', 'Journal'], ['fuel', 'Fuel'], ['expense', 'Expense'], ['stop', 'Add stop / detour']].map(([k, v]) => '<button type="button" data-seg="' + k + '" aria-pressed="' + (seg === k) + '">' + v + '</button>').join('') + '</div>';
   const last = lastCheckin();
   if (seg === 'checkin') {
-    h += '<form class="card" id="f-checkin"><p class="small" style="margin:0">Drops the yellow "we\'re here" dot and extends the driven route. Arriving within 20 km of a planned stop ticks it off.</p>' +
+    h += '<form class="card" id="f-checkin"><p class="small" style="margin:0">Drops the golden "we\'re here" dot and extends the driven route. Arriving within 20 km of a planned stop ticks it off.</p>' +
       locBlock('Tap "Use my location" (works best) or pick the spot on the map.') +
       '<div class="field"><label for="ci-place">Place name (optional)</label><input id="ci-place" placeholder="Worked out automatically if blank"></div>' +
       '<div class="field"><label for="ci-note">Note for the family (optional)</label><input id="ci-note" placeholder="e.g. Made it across the Nullarbor!"></div>' +
