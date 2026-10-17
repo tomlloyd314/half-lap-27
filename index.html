@@ -6,6 +6,13 @@
 <meta name="theme-color" content="#c9d6c9">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lloyd’s Half Lap 27’">
+<meta property="og:title" content="Lloyd’s Half Lap 27’">
+<meta property="og:description" content="Follow our half lap of Australia: the map, where we are now, and our journal.">
+<meta property="og:image" content="https://tomlloyd314.github.io/half-lap-27/icon-512.png">
+<meta property="og:url" content="https://tomlloyd314.github.io/half-lap-27/">
+<meta name="description" content="Follow our half lap of Australia: the map, where we are now, and our journal.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1038,6 +1045,30 @@ details.more[open] > div { margin-top: 18px; display: grid; gap: 18px; }
   @keyframes pop { from { transform: scale(0); } 60% { transform: scale(1.3); } to { transform: scale(1); } }
 }
 
+
+/* Share & reply */
+.entry-actions { padding-top: 6px; }
+.mini.share { display: inline-flex; align-items: center; gap: 7px; }
+.mini.share svg { width: 15px; height: 15px; }
+.mini.share[data-act="reply"] { background: var(--sign); border-color: transparent; color: var(--sign-ink); }
+.entry.flash { box-shadow: 0 0 0 3px var(--warn), var(--shadow-lift); }
+.chatbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px 18px; border-radius: 16px; background: color-mix(in srgb, var(--c-journal) 35%, var(--card)); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.chatbar .ic { width: 42px; height: 42px; border-radius: 12px; background: var(--c-journal); color: var(--sign-ink); display: grid; place-items: center; }
+.chatbar .ic svg { width: 22px; height: 22px; }
+.chatbar b { display: block; font: 800 16px/1.2 var(--f-display); }
+.chatbar small { color: var(--muted); font-size: 13px; }
+.chatbar .go { font-size: 20px; }
+.sheet-wrap { position: fixed; inset: 0; z-index: 4500; background: rgba(20, 26, 25, 0); display: flex; align-items: flex-end; justify-content: center; transition: background .25s var(--ease); }
+.sheet-wrap.open { background: rgba(20, 26, 25, .45); }
+.sheet { width: min(520px, 100%); background: var(--panel); border-radius: 24px 24px 0 0; padding: 24px max(20px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; transform: translateY(100%); transition: transform .3s var(--ease); box-shadow: 0 -12px 40px rgba(0,0,0,.25); }
+.sheet-wrap.open .sheet { transform: none; }
+.sheet h3 { margin: 0; font: 800 19px/1.2 var(--f-display); }
+.sheet .hint { margin-top: -6px; }
+.sheet-opts { display: grid; gap: 10px; }
+.sheet-opt { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); text-decoration: none; font-weight: 700; font-size: 15px; cursor: pointer; text-align: left; width: 100%; position: relative; overflow: hidden; }
+.sheet-opt svg { width: 20px; height: 20px; color: var(--route); flex: none; }
+@media (min-width: 641px) { .sheet-wrap { align-items: center; } .sheet { border-radius: 24px; } }
+
 /* Phone polish */
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--page); z-index: 5000; }
 .page { padding-top: calc(32px + env(safe-area-inset-top, 0px)); }
@@ -1620,12 +1651,19 @@ function tripHTML() {
 function journalHTML() {
   const j = state.data.journal.slice().sort((a, b) => new Date(b.time) - new Date(a.time));
   if (!j.length) return '<div class="empty">No journal entries yet. Posts with a photo and a pin on the map will show up here.</div>';
-  return '<section class="section"><h2>Journal</h2><div class="journal-list">' + j.map(e =>
-    '<article class="entry lift">' + (e.photo ? '<img loading="lazy" src="' + esc(e.photo) + '" alt="' + esc(e.title) + '">' : '') +
+  const chat = familyChat();
+  return '<section class="section"><h2>Journal</h2>' +
+    (chat ? '<a class="chatbar lift" href="' + esc(chat.url) + '" target="_blank" rel="noopener"><span class="ic">' + svgI('chat') + '</span><span><b>Message ' + esc(chat.name) + '</b><small>Say hi or reply to a post in the family chat</small></span><span class="go" aria-hidden="true">→</span></a>' : '') +
+    '<div class="journal-list">' + j.map(e =>
+    '<article class="entry lift" id="j-' + esc(e.id) + '">' + (e.photo ? '<img loading="lazy" src="' + esc(e.photo) + '" alt="' + esc(e.title) + '">' : '') +
     '<div class="body"><div class="when">' + esc(fmtTime(e.time)) + (e.place ? ' · ' + esc(e.place) : '') + '</div>' +
     '<h3>' + esc(e.title) + '</h3><p>' + esc(e.text) + '</p>' +
-    '<div class="btnrow">' + (e.lat != null && e.lat !== '' ? '<button class="mini" data-act="focusj" data-id="' + esc(e.id) + '">Show on map</button>' : '') +
-    (state.unlocked && !e.public ? '<span class="chip">Only visible to you</span>' : '') + '</div></div></article>').join('') + '</div></section>';
+    '<div class="btnrow entry-actions">' +
+      '<button class="mini share" data-act="reply" data-id="' + esc(e.id) + '">' + svgI('chat') + 'Reply</button>' +
+      '<button class="mini share" data-act="share" data-id="' + esc(e.id) + '">' + svgI('share') + 'Share</button>' +
+      (e.lat != null && e.lat !== '' ? '<button class="mini" data-act="focusj" data-id="' + esc(e.id) + '">Show on map</button>' : '') +
+      (state.unlocked && !e.public ? '<span class="chip">Only visible to you</span>' : '') +
+    '</div></div></article>').join('') + '</div></section>';
 }
 
 function moneyHTML() {
@@ -1684,7 +1722,11 @@ const ICONS = {
   expense: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v5M17.5 9.5v5"/>',
   stop: '<path d="M12 5v14M5 12h14"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
-  check: '<path d="M5 12.5l4.5 4.5L19 7"/>'
+  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+  share: '<path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v7h14v-7"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'
 };
 const svgI = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + '</svg>';
 const ACTIONS = [
@@ -1944,9 +1986,64 @@ async function flush(fromSave) {
 function lockPhone() { state.pin = ''; state.unlocked = false; LS.set('hl27_pin', ''); }
 
 /* =========================================================
+   SHARING journal posts to group chats
+   ========================================================= */
+function familyChat() {
+  const s = state.data.settings || {};
+  return s.familyChatUrl ? { url: String(s.familyChatUrl), name: String(s.familyChatName || 'the family chat') } : null;
+}
+function entryUrl(e) { return location.origin + location.pathname + '#j-' + e.id; }
+async function shareEntry(e, reply) {
+  const url = entryUrl(e);
+  const text = reply
+    ? 'Replying to “' + e.title + '” from Lloyd’s Half Lap 27’: '
+    : '“' + e.title + '” — new from Lloyd’s Half Lap 27’' + (e.place ? ' (' + e.place + ')' : '');
+  if (navigator.share) {
+    try { await navigator.share({ title: e.title, text, url }); return; }
+    catch (err) { if (err && err.name === 'AbortError') return; }
+  }
+  openShareSheet(e, text, url, reply);
+}
+function openShareSheet(e, text, url, reply) {
+  closeShareSheet();
+  const both = text + ' ' + url, enc = encodeURIComponent;
+  const chat = familyChat();
+  const opts = [
+    chat ? ['chat', 'Open ' + chat.name, chat.url] : null,
+    ['chat', 'Messages (text)', 'sms:?&body=' + enc(both)],
+    ['chat', 'WhatsApp', 'https://wa.me/?text=' + enc(both)],
+    ['chat', 'Messenger', 'fb-messenger://share/?link=' + enc(url)],
+    ['mail', 'Email', 'mailto:?subject=' + enc(e.title) + '&body=' + enc(both)]
+  ].filter(Boolean);
+  const el = document.createElement('div');
+  el.className = 'sheet-wrap'; el.id = 'shareSheet';
+  el.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="Share"><h3>' + (reply ? 'Reply in a group chat' : 'Share this post') + '</h3>' +
+    '<p class="hint">' + (reply ? 'Pick where your family chats, then add your message.' : 'Pick a chat to send the link to.') + '</p>' +
+    '<div class="sheet-opts">' + opts.map(o => '<a class="sheet-opt" href="' + esc(o[2]) + '" target="_blank" rel="noopener">' + svgI(o[0]) + '<span>' + esc(o[1]) + '</span></a>').join('') +
+    '<button type="button" class="sheet-opt" data-act="copylink" data-url="' + esc(both) + '">' + svgI('link') + '<span>Copy message and link</span></button></div>' +
+    '<button type="button" class="btn ghost big" data-act="closeshare">Close</button></div>';
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('open'));
+}
+function closeShareSheet() { const el = $('#shareSheet'); if (el) el.remove(); }
+/** Opening a shared link (…#j-ID) jumps straight to that post. */
+function openDeepLink() {
+  const m = /^#j-(.+)$/.exec(location.hash);
+  if (!m || !state.data) return;
+  state.tab = 'journal'; renderHeader(); renderPanel();
+  setTimeout(() => {
+    const a = document.getElementById('j-' + m[1]);
+    if (a) { a.scrollIntoView({ behavior: 'smooth', block: 'start' }); a.classList.add('flash'); setTimeout(() => a.classList.remove('flash'), 2400); }
+  }, 300);
+}
+window.addEventListener('hashchange', openDeepLink);
+
+/* =========================================================
    EVENTS
    ========================================================= */
 document.addEventListener('click', e => {
+  if (e.target.id === 'shareSheet') { closeShareSheet(); return; }
+  if (e.target.closest('.sheet-opt[href]')) setTimeout(closeShareSheet, 300);
   const tabBtn = e.target.closest('#tabs button');
   if (tabBtn) { goTab(tabBtn.dataset.tab); return; }
   const segBtn = e.target.closest('[data-seg]');
@@ -1979,11 +2076,18 @@ document.addEventListener('click', e => {
     const note = ($('#ci-note') || {}).value || '';
     save('checkin', { lat: st.lat, lng: st.lng, place: st.name, note: note.trim() }).then(() => toast('Checked in at ' + st.name, true));
   }
+  else if (act === 'share' || act === 'reply') { const en = state.data.journal.find(x => x.id === a.dataset.id); if (en) shareEntry(en, act === 'reply'); }
+  else if (act === 'closeshare') closeShareSheet();
+  else if (act === 'copylink') {
+    const txt = a.dataset.url;
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => { toast('Copied. Paste it into your chat.', true); closeShareSheet(); }, () => toast('Couldn’t copy on this device.'));
+  }
   else if (act === 'flush') flush(true);
   else if (act === 'crew') { goTab('crew'); setTimeout(() => { const i = $('#pinInput'); if (i) i.focus(); }, 350); }
   else if (act === 'lock') { lockPhone(); state.tab = 'overview'; if (!DEMO) load(); else render(); }
 });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#shareSheet')) { closeShareSheet(); return; }
   if (e.key === 'Escape' && $('#mapwrap').classList.contains('expanded')) { state.picking = false; $('#pickHint').hidden = true; toggleExpand(false); return; }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.stop[data-act="focus"]')) { e.preventDefault(); e.target.click(); }
 });
@@ -2159,8 +2263,20 @@ function demoData() {
   };
 }
 
+/* Auto-update: compare this page's build with the one on the server and reload when it's newer */
+const BUILD = '20261018103618';
+async function checkForUpdate() {
+  if (DEMO || !/^https?:/.test(location.protocol)) return;
+  try {
+    const r = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
+    const m = /const BUILD = '([^']+)'/.exec(await r.text());
+    if (m && m[1] !== BUILD) { toast('Updating to the latest version…'); setTimeout(() => location.replace(location.pathname + '?v=' + m[1] + location.hash), 600); }
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
 initTabs();
-load();
+load().then(openDeepLink);
+checkForUpdate();
 </script>
 
 </body>
