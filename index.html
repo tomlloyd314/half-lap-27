@@ -1523,9 +1523,9 @@ function tripHTML() {
   let h = '<section class="section"><h2>Fuel plan</h2><div class="tiles">' +
     '<div class="tile lift"><span>Planned driving</span><b>' + n0(sum(L_, 'km')) + ' km</b><small>' + n0(sum(remaining, 'km')) + ' km still to go</small></div>' +
     '<div class="tile lift"><span>Diesel needed</span><b>' + n0(sum(L_, 'litres')) + ' L</b><small>' + n0(sum(remaining, 'litres')) + ' L still to buy</small></div>' +
-    '<div class="tile lift"><span>Fuel cost</span><b>' + money(sum(L_, 'cost')) + '</b><small>' + money(sum(remaining, 'cost')) + ' still to spend</small></div>' +
+    (state.unlocked ? '<div class="tile lift"><span>Fuel cost</span><b>' + money(sum(L_, 'cost')) + '</b><small>' + money(sum(remaining, 'cost')) + ' still to spend</small></div>' : '') +
     '<div class="tile lift"><span>Nights planned</span><b>' + nights + '</b><small>' + activeStops().length + ' stops</small></div>' +
-    '</div><p class="fineprint">At <b>' + n1(eco.value) + ' L/100km</b> (' + (eco.source === 'logged' ? 'your real figure from the fuel log' : 'planning figure; switches to your real figure after two full-tank fills') + '), $' + s.price.toFixed(2) + '/L in town and $' + s.remotePrice.toFixed(2) + '/L remote. One ' + s.tank + ' L tank with ' + s.reserve + ' L kept in reserve' + (s.jerry ? ' plus ' + s.jerry + ' L of jerry cans' : '') + ' gets you about <b>' + n0(range) + ' km</b>. ' +
+    '</div><p class="fineprint">At <b>' + n1(eco.value) + ' L/100km</b> (' + (eco.source === 'logged' ? 'your real figure from the fuel log' : 'planning figure; switches to your real figure after two full-tank fills') + ')' + (state.unlocked ? ', $' + s.price.toFixed(2) + '/L in town and $' + s.remotePrice.toFixed(2) + '/L remote' : '') + '. One ' + s.tank + ' L tank with ' + s.reserve + ' L kept in reserve' + (s.jerry ? ' plus ' + s.jerry + ' L of jerry cans' : '') + ' gets you about <b>' + n0(range) + ' km</b>. ' +
     (L_.some(l => l.approx) ? 'Distances marked ≈ are straight-line estimates until the Sheet works out the road distance.' : '') + '</p></section>';
 
   h += '<section class="section"><h2>Itinerary</h2><div class="itin">';
@@ -1543,8 +1543,8 @@ function tripHTML() {
       const fills = !l.ferry ? Math.max(0, Math.ceil(l.km / range) - 1) : 0;
       h += '<div class="leg"><div class="legsign' + (l.ferry ? ' ferry' : '') + '">' + ICON_ARROW + '<span>' + esc(st.name) + '</span><span class="km">' + (l.ferry ? 'FERRY' : (l.approx ? '≈' : '') + n0(l.km) + ' km') + '</span></div>' +
         (l.ferry ? '<div class="legmeta"><span>Car stays on the mainland</span></div>' :
-        '<div class="legmeta"><span class="num">' + n1(l.hours) + ' h</span><span class="num">' + n0(l.litres) + ' L</span><span class="num">~' + money(l.cost) + '</span>' +
-        (l.remote ? '<span class="chip">Remote fuel $' + l.price.toFixed(2) + '</span>' : '') +
+        '<div class="legmeta"><span class="num">' + n1(l.hours) + ' h</span><span class="num">' + n0(l.litres) + ' L</span>' + (state.unlocked ? '<span class="num">~' + money(l.cost) + '</span>' : '') +
+        (l.remote ? '<span class="chip">Remote fuel' + (state.unlocked ? ' $' + l.price.toFixed(2) : '') + '</span>' : '') +
         (fills && l.remote ? '<span class="chip warn">Longer than one tank: plan ' + fills + ' fuel stop' + (fills > 1 ? 's' : '') + ' or carry a jerry can</span>' : fills ? '<span class="chip">Refuel ' + fills + '× on the way</span>' : '') +
         '</div>') + '</div>';
     }
