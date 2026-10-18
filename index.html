@@ -10,11 +10,14 @@
 <meta property="og:site_name" content="Lloyd’s Half Lap 27’">
 <meta property="og:title" content="Lloyd’s Half Lap 27’">
 <meta property="og:description" content="Follow our half lap of Australia: the map, where we are now, and our journal.">
-<meta property="og:image" content="https://tomlloyd314.github.io/half-lap-27/icon-512.png">
+<meta property="og:image" content="https://tomlloyd314.github.io/half-lap-27/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://tomlloyd314.github.io/half-lap-27/">
 <meta name="description" content="Follow our half lap of Australia: the map, where we are now, and our journal.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1106,6 +1109,9 @@ tr.rowlink { cursor: pointer; }
 .vplay svg { width: 26px; height: 26px; margin-left: 4px; }
 .gcount { position: absolute; right: 12px; bottom: 12px; background: rgba(20,26,25,.7); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
 
+.gslide a { display: block; width: 100%; height: 100%; }
+a.linkbtn { text-decoration: none; }
+
 /* Phone polish */
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--page); z-index: 5000; }
 .page { padding-top: calc(32px + env(safe-area-inset-top, 0px)); }
@@ -1626,7 +1632,7 @@ function overviewHTML() {
       [fmtDay(next.arrive), next.nights ? next.nights + (next.nights === 1 ? ' night' : ' nights') : '', nextLeg && nextLeg.km ? (nextLeg.approx ? '≈' : '') + n0(nextLeg.km) + ' km away' : ''].filter(Boolean).map(esc).join(' · ') + '</div>' +
       (next.campsite ? '<div class="small">' + esc(next.campsite) + '</div>' : '') + '<button class="linkbtn" data-act="focus" data-id="' + esc(next.id) + '">Show on map</button></div>' : '') +
     (j ? '<div class="ov-card lift"><span class="lbl">Latest from the journal</span>' + (j.photo ? '<img class="thumb" src="' + esc(j.photo) + '" alt="' + esc(j.title) + '">' : '') +
-      '<div class="jt">' + esc(j.title) + '</div><div class="small muted">' + esc(fmtTime(j.time)) + (j.place ? ' · ' + esc(j.place) : '') + '</div><button class="linkbtn" data-goto="journal">Read the journal</button></div>' : '') +
+      '<div class="jt">' + esc(j.title) + '</div><div class="small muted">' + esc(fmtTime(j.time)) + (j.place ? ' · ' + esc(j.place) : '') + '</div><button class="linkbtn" data-goto="journal">Read the journal</button>' + '</div>' : '') +
     '</div></div>';
 }
 function mapTabHTML() {
@@ -1879,7 +1885,7 @@ function mediaHTML() {
       : '<img src="' + esc(x.data || x.thumb || x.src) + '" alt="">') +
     '<button type="button" class="mdel" data-act="mremove" data-i="' + i + '" aria-label="Remove">×</button>' + (x.data ? '<span class="mnew">New</span>' : '') + '</div>').join('') +
     '<label class="mtile madd">' + svgI('camera') + '<span>Add photos or videos</span><input type="file" id="j-media" accept="image/*,video/*" multiple></label></div>' +
-    '<p class="hint">Photos are shrunk to save data. Videos up to ' + MAX_VIDEO_MB + ' MB (about 20 seconds); trim longer ones in your Photos app first.</p>';
+    '<p class="hint">Photos upload at full quality. Videos up to ' + MAX_VIDEO_MB + ' MB (about 20 seconds); trim longer ones in your Photos app first.</p>';
 }
 function readAsDataURL(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
 async function addMediaFiles(files) {
@@ -2010,14 +2016,17 @@ function bindLog(changed) {
     [fl, fp, ft].forEach(el => el.addEventListener('input', upd)); upd();
   }
 }
-function shrinkPhoto(file) {
+/** Keeps photos at full quality. Only very large files are scaled down, and then to 4096 px at high quality. */
+const KEEP_ORIGINAL_MB = 15;
+async function shrinkPhoto(file) {
+  if (file.size <= KEEP_ORIGINAL_MB * 1048576 && /^image\/(jpeg|png|webp)$/.test(file.type)) return readAsDataURL(file);
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file), img = new Image();
     img.onload = () => {
-      const max = 1600, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const max = 4096, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
       const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.8));
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.92));
     };
     img.onerror = () => { URL.revokeObjectURL(url); rej(); };
     img.src = url;
@@ -2172,7 +2181,7 @@ function galleryHTML(e) {
   const slide = x => x.type === 'video'
     ? (x.data ? '<video src="' + x.data + '" controls playsinline preload="metadata"></video>'
       : '<button type="button" class="vposter" data-act="playvid" data-src="' + esc(x.src) + '" aria-label="Play video"><img loading="lazy" src="' + esc(x.thumb || '') + '" alt=""><span class="vplay">' + svgI('play') + '</span></button>')
-    : '<img loading="lazy" src="' + esc(x.src || x.data) + '" alt="' + esc(e.title) + '">';
+    : (x.full ? '<a href="' + esc(x.full) + '" target="_blank" rel="noopener" title="Open full size"><img loading="lazy" src="' + esc(x.src) + '" alt="' + esc(e.title) + '"></a>' : '<img loading="lazy" src="' + esc(x.src || x.data) + '" alt="' + esc(e.title) + '">');
   return '<div class="gallery"><div class="gtrack">' + m.map(x => '<div class="gslide">' + slide(x) + '</div>').join('') + '</div>' +
     (m.length > 1 ? '<span class="gcount">' + m.length + ' · swipe</span>' : '') + '</div>';
 }
@@ -2309,6 +2318,7 @@ document.addEventListener('pointerdown', e => {
   s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
   t.appendChild(s); setTimeout(() => s.remove(), 600);
 });
+function cleanUrl(u) { u = (u || '').trim(); return /^https:\/\//i.test(u) ? u : ''; }
 function whenIso() { const el = $('#when'); if (!el || !el.value) return undefined; const d = new Date(el.value); return isNaN(d) ? undefined : d.toISOString(); }
 document.addEventListener('submit', async e => {
   e.preventDefault();
@@ -2478,7 +2488,7 @@ function demoData() {
 }
 
 /* Auto-update: compare this page's build with the one on the server and reload when it's newer */
-const BUILD = '20261018104803';
+const BUILD = '20261018130648';
 async function checkForUpdate() {
   if (DEMO || !/^https?:/.test(location.protocol)) return;
   try {
